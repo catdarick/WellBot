@@ -26,10 +26,11 @@ dependencies:
 - bytestring
 - text
 - http-conduit
+- http-client
 - configurator
 - aeson-casing
 - aeson
-
+- transformers  
 library:
   source-dirs: src
 

@@ -13,18 +13,42 @@ import           Data.Aeson.Casing
 import GHC.Generics 
 import Data.Aeson.Types (parse, Parser)
 import Data.ByteString.Lazy.Char8 (fromStrict)
+import Network.HTTP.Conduit 
+import Network.HTTP.Client.Conduit (setQueryString)
+import Control.Monad.Trans.State (StateT)
 
+
+import Data.Configurator
+import Data.Configurator.Types  as CValue
+
+import Telegram.Interact
+
+getData = [("key1", Just "value1"), ("key2", Just "value2")] :: [(BS.ByteString, Maybe BS.ByteString)]
 getJSON :: IO BS.ByteString
 getJSON = do
-  res <- httpBS "https://api.telegram.org/bot1117485587:AAGcu3atF-i1WdLHgpl9pC2wh5s0E05ocpw/getUpdates"
+  let x = "https://api.telegram.org/bot1117485587:AAGcu3atF-i1WdLHgpl9pC2wh5s0E05ocpw/getUpdates"
+  let t = setQueryString [("offset", Just "990352328")] x
+
+  print t
+  res <- httpBS t  
   return (getResponseBody res)
+
+--tmpFunc :: StateT 
+   
 
 main :: IO ()
 main = do
-  json <- getJSON
-  let bsJSON = fromStrict json
-  BS.putStrLn json
-  print (decode bsJSON :: Maybe Response)
+  cfg <- load [Required "/home/darick/wellbot/app/bot.cfg"]
+  config <- (Telegram.Interact.parseConfig cfg)
+  t <- Telegram.Interact.getUpdates config 990352328
+  print t
+  t <- Telegram.Interact.sendMessage config 322778141 "Hi bruh"
+  print t
+  --json <- getJSON
+  --print ""
+  --let bsJSON = fromStrict json
+ -- BS.putStrLn json
+  --print (decode bsJSON :: Maybe Response)
 
 
 

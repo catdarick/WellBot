@@ -16,6 +16,7 @@ instance FromJSON User where
    parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
 -------
+
 data Chat = Chat 
     { chatId::Integer
     } deriving (Generic, Show)
@@ -53,12 +54,12 @@ instance FromJSON Update where
 
 -------
 
-data Response = Response 
+data Response respType = Response 
     { responseOk::Bool
-    , responseResult::[Update]
+    , responseResult::respType
     } deriving (Generic, Show)
 
-instance ToJSON Response where
+instance ToJSON respType => ToJSON (Response respType) where
    toJSON = genericToJSON $ aesonPrefix snakeCase
-instance FromJSON Response where
+instance FromJSON respType => FromJSON (Response respType) where
    parseJSON = genericParseJSON $ aesonPrefix snakeCase
