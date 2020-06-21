@@ -30,7 +30,8 @@ dependencies:
 - configurator
 - aeson-casing
 - aeson
-- transformers  
+- transformers
+- unix-time  
 library:
   source-dirs: src
 

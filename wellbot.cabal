@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d9fd3847ca774eea14aed9c2c9001e97502f93842d848b34aa800db3c914b6cf
+-- hash: bc6a9e9abed67e11f894e5422761356f2996e0ba240283470e034655914f094e
 
 name:           wellbot
 version:        0.1.0.0
@@ -44,6 +44,7 @@ library
     , lens-aeson
     , text
     , transformers
+    , unix-time
   default-language: Haskell2010
 
 executable wellbot-exe
@@ -68,6 +69,7 @@ executable wellbot-exe
     , lens-aeson
     , text
     , transformers
+    , unix-time
     , wellbot
   default-language: Haskell2010
 
@@ -91,5 +93,6 @@ test-suite wellbot-test
     , lens-aeson
     , text
     , transformers
+    , unix-time
     , wellbot
   default-language: Haskell2010

@@ -33,6 +33,7 @@ data Message = Message
     , messageFrom::User
     , messageText::String
     , messageChat::Chat
+    , messageDate::Integer
     } deriving (Generic, Show)
 
 instance ToJSON Message where
@@ -62,4 +63,42 @@ data Response respType = Response
 instance ToJSON respType => ToJSON (Response respType) where
    toJSON = genericToJSON $ aesonPrefix snakeCase
 instance FromJSON respType => FromJSON (Response respType) where
+   parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+
+
+------------------------------- For ToJSON ---------------------------
+
+
+
+data Keyboardbutton = Keyboardbutton 
+    { keyboardbuttonText :: String
+    } deriving (Generic, Show)
+
+instance ToJSON Keyboardbutton where
+   toJSON = genericToJSON $ aesonPrefix snakeCase
+instance FromJSON Keyboardbutton where
+   parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+-------
+
+data Replykeyboardmarkup = Replykeyboardmarkup 
+    { replykeyboardmarkupKeyboard :: [[Keyboardbutton]]
+    , replykeyboardmarkupOneTimeKeyboard :: Bool
+    } deriving (Generic, Show)
+
+instance ToJSON Replykeyboardmarkup where
+   toJSON = genericToJSON $ aesonPrefix snakeCase
+instance FromJSON Replykeyboardmarkup where
+   parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+-------
+
+data Messagewithkb = Messagewithkb 
+    { messagewithkbReplyMarkup::Replykeyboardmarkup
+    } deriving (Generic, Show)
+
+instance ToJSON Messagewithkb where
+   toJSON = genericToJSON $ aesonPrefix snakeCase
+instance FromJSON Messagewithkb where
    parseJSON = genericParseJSON $ aesonPrefix snakeCase
