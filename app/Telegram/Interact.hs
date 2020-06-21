@@ -104,7 +104,6 @@ doPostRequest config method query jsonData = do
   lift $ print bsRes
   return (bsRes)
 
---getUpdates :: Config -> Integer -> m (Maybe TgTypes.Response)
 getUpdates config = do
   db <- get
   bsRes <- doGetRequest config "getUpdates" [("offset", show (db & DB.offset))]
@@ -115,7 +114,6 @@ getUpdates config = do
     Just res -> return (Just $ res & TgTypes.responseResult)
     Nothing  -> return (Nothing)
 
---sendMessage :: Show a => Config -> a -> [Char] -> IO (Maybe (TgTypes.Response TgTypes.Message))
 sendMessage config chatId text = do
   let query = [("chat_id", show chatId), ("text", text)]
   bsRes <- doGetRequest config "sendMessage" query
@@ -154,17 +152,20 @@ handleUpdate config update = do
       something -> do
         isAwaiting <- DB.isAwaiting chatId
         if isAwaiting && (length text == 1 && isDigit (head text))
-          then do 
-            DB.setRepeatsAmount chatId (toInteger $ fromEnum (head text) - fromEnum '0')
+          then do
+            DB.setRepeatsAmount
+              chatId
+              (toInteger $ fromEnum (head text) - fromEnum '0')
             DB.setOffset (updateId + 1)
             return ()
           else do
             lift $ print repAmount
-            replicateM (fromInteger repAmount) (sendMessage config chatId something)
+            replicateM
+              (fromInteger repAmount)
+              (sendMessage config chatId something)
             DB.setOffset (updateId + 1)
             return ()
         DB.delAwaitingChat chatId
-                --return ()
   return ()
 
 loop config = do
