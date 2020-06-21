@@ -85,6 +85,7 @@ instance FromJSON Keyboardbutton where
 data Replykeyboardmarkup = Replykeyboardmarkup 
     { replykeyboardmarkupKeyboard :: [[Keyboardbutton]]
     , replykeyboardmarkupOneTimeKeyboard :: Bool
+    , replykeyboardmarkupResizeKeyboard :: Bool
     } deriving (Generic, Show)
 
 instance ToJSON Replykeyboardmarkup where

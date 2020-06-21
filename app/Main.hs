@@ -24,6 +24,7 @@ import Data.Configurator.Types  as CValue
 import qualified Telegram.JsonTypes as TgTypes
 import Telegram.Interact
 import Data.Function ((&))
+import Control.Monad (when)
 
 getData = [("key1", Just "value1"), ("key2", Just "value2")] :: [(BS.ByteString, Maybe BS.ByteString)]
 getJSON :: IO BS.ByteString
@@ -42,8 +43,9 @@ getJSON = do
 main = do
   cfg <- load [Required "/home/darick/wellbot/app/bot.cfg"]
   config <- (Telegram.Interact.parseConfig cfg)
+  when (True) $ return()
   Telegram.Interact.start config
-  maybeRes <- evalStateT (Telegram.Interact.getUpdates config 990352328) 1
+ -- maybeRes <- evalStateT (Telegram.Interact.getUpdates config 990352328) 1
 
   --t <- Telegram.Interact.sendMessage config 322778141 "Hi bruh"
   --print t
