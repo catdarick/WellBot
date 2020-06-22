@@ -1,32 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
+module Telegram.Database.Interact where
+    
+import Telegram.Database.Types 
+import Control.Monad.Trans.State (modify, put, get)
+import Data.List (find)
+import Data.Function ((&))
+import Control.Monad.Trans.Class (MonadTrans(lift))
 
-module Telegram.RuntimeDB where
-
-import           Control.Monad.Trans.Class (MonadTrans (lift))
-import           Control.Monad.Trans.State (get, modify, put)
-import           Data.Configurator         as Configurator
-import           Data.Configurator.Types   as Configurator.Types
-import           Data.Function             ((&))
-import           Data.List                 (find)
-
-data Chat =
-  Chat
-    { chatID        :: Integer
-    , repeatsAmount :: Integer
-    }
-  deriving (Show)
-
--------
-data DB =
-  DB
-    { offset              :: Integer
-    , defaultRepeatAmount :: Integer
-    , chats               :: [Chat]
-    , awaitingChatsID     :: [Integer]
-    }
-  deriving (Show)
-
--------------------------------------------------------
 setOffset newOffset = do
   db <- get
   put (db {offset = newOffset})
@@ -74,3 +53,10 @@ getRepeatsAmount chatId = do
   case res of
     Nothing -> return (db & defaultRepeatAmount)
     Just Chat {repeatsAmount = repAmaount} -> return repAmaount
+
+getInitialDatabase defaultRepeatsAmount = (DB
+         { offset = 0
+         , defaultRepeatAmount = defaultRepeatsAmount
+         , chats = []
+         , awaitingChatsID = []
+         })

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc6a9e9abed67e11f894e5422761356f2996e0ba240283470e034655914f094e
+-- hash: 387295597d83db5fd468d1c9f04c545d206410ca501366d7719231740b4a2362
 
 name:           wellbot
 version:        0.1.0.0
@@ -50,9 +50,13 @@ library
 executable wellbot-exe
   main-is: Main.hs
   other-modules:
+      Telegram.Config
+      Telegram.Database.Interact
+      Telegram.Database.Types
       Telegram.Interact
       Telegram.JsonTypes
-      Telegram.RuntimeDB
+      Telegram.Keyboard.Builder
+      Telegram.Keyboard.Types
       Paths_wellbot
   hs-source-dirs:
       app
