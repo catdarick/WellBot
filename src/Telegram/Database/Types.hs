@@ -5,19 +5,24 @@ module Telegram.Database.Types where
 import Data.Time (UTCTime, DiffTime)
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
-data Chat =
+import Data.Map (Map)
+
+type ChatId = Integer
+type RepeatsAmount = Integer 
+
+{- data Chat =
   Chat
     { chatID        :: Integer
     , repeatsAmount :: Integer
     }
-  deriving (Show, Generic, ToJSON, FromJSON)
+  deriving (Show, Generic, ToJSON, FromJSON) -}
 
 -------
 data DB =
   DB
     { offset              :: Integer
     , defaultRepeatAmount :: Integer
-    , chats               :: [Chat]
+    , chats               :: Map ChatId RepeatsAmount
     , awaitingChatsID     :: [Integer]
     , loopsCount          :: Integer
     , prevTime            :: UTCTime

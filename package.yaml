@@ -31,6 +31,7 @@ dependencies:
 - aeson-casing
 - aeson
 - transformers
+- containers
 - time 
 library:
   source-dirs: src

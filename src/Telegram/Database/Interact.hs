@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Telegram.Database.Interact where
@@ -9,7 +10,10 @@ import           Data.Aeson                (ToJSON, decode, encode)
 import qualified Data.ByteString.Lazy      as DataByteString
 import           Data.Function             ((&))
 import           Data.List                 (find)
-import           Data.Time                 (UTCTime, getCurrentTime, getTime_resolution)
+import           Data.Map                  (Map, adjust, empty, insert)
+import           Data.Map                  (delete, lookup)
+import           Data.Time                 (UTCTime, getCurrentTime,
+                                            getTime_resolution)
 import           Telegram.Database.Types
 
 setOffset :: Monad m => Integer -> StateT DB m ()
@@ -27,53 +31,47 @@ isAwaiting chatId = do
   let awChatsVal = (db & awaitingChatsID)
   return $ chatId `elem` awChatsVal
 
-delAwaitingChat :: Monad m => Integer -> StateT DB m ()
+getFromDatabase :: (a -> b) -> StateT a IO b
+getFromDatabase field = do
+  db <- get
+  return $ db & field
+
+setNewChats :: Map ChatId RepeatsAmount -> StateT DB IO ()
+setNewChats newChats = do
+  db <- get
+  put (db {chats = newChats})
+
+delAwaitingChat :: Integer -> StateT DB IO ()
 delAwaitingChat chatId = do
   db <- get
   let awChatsVal = (db & awaitingChatsID)
   let newChatsVal = [x | x <- awChatsVal, x /= chatId]
   put (db {awaitingChatsID = newChatsVal})
 
-addChat :: Monad m => Integer -> Integer -> StateT DB m ()
+addChat :: Integer -> Integer -> StateT DB IO ()
 addChat chatId repAmount = do
-  let newChat = Chat {chatID = chatId, repeatsAmount = repAmount}
-  modify (addNewChat newChat)
-  where
-    addNewChat newChat (db@DB {chats = chatsVal}) =
-      db {chats = newChat : chatsVal}
+  chatsOld <- getFromDatabase chats
+  setNewChats $ insert chatId repAmount chatsOld
 
-delChat :: Monad m => Integer -> StateT DB m ()
+delChat :: Integer -> StateT DB IO ()
 delChat chatId = do
-  db <- get
-  let chatsVal = (db & chats) :: [Chat]
-  let newChatsVal = [x | x <- chatsVal, (x & chatID) /= chatId]
-  put (db {chats = newChatsVal})
+  chatsOld <- getFromDatabase chats
+  setNewChats $ delete chatId chatsOld
 
-getChatById :: Monad m => Integer -> StateT DB m (Maybe Chat)
-getChatById chatId = do
-  db <- get
-  let chatsVal = (db & chats) :: [Chat]
-  return $ find (\Chat {chatID = chatIdVal} -> chatIdVal == chatId) chatsVal
-
-setRepeatsAmount :: Monad m => Integer -> Integer -> StateT DB m ()
+setRepeatsAmount :: Integer -> Integer -> StateT DB IO ()
 setRepeatsAmount chatId repAmount = do
   delChat chatId
   addChat chatId repAmount
 
 getRepeatsAmount :: Integer -> StateT DB IO Integer
 getRepeatsAmount chatId = do
-  db <- get
-  res <- getChatById chatId
-  lift $ print res
-  let defaultRepeatsAmount = (db & defaultRepeatAmount)
-  return $ maybe defaultRepeatsAmount getRepeatsAmountFromChat res
-  where
-    getRepeatsAmountFromChat (Chat {repeatsAmount = repAmaount}) = repAmaount
+  chats <- getFromDatabase chats
+  defaultRepeatsAmount <- getFromDatabase defaultRepeatAmount
+  let res = Data.Map.lookup chatId chats
+  return $ maybe defaultRepeatsAmount id res
 
 getLoopsCount :: StateT DB IO Integer
-getLoopsCount = do
-  db <- get
-  return (db & loopsCount)
+getLoopsCount = getFromDatabase loopsCount
 
 updateTime :: StateT DB IO ()
 updateTime = do
@@ -114,7 +112,7 @@ getInitialDatabase defaultRepeatsAmount time =
   (DB
      { offset = 0
      , defaultRepeatAmount = defaultRepeatsAmount
-     , chats = []
+     , chats = empty
      , awaitingChatsID = []
      , loopsCount = 0
      , prevTime = time
