@@ -22,6 +22,7 @@ import qualified Telegram.Database.Interact  as DB
 import qualified Telegram.Database.Types     as DB
 import qualified Telegram.JsonTypes          as TgTypes
 import           Telegram.Keyboard.Builder
+import Data.Time (diffUTCTime, getCurrentTime, getTime_resolution)
 
 doGetRequest :: Config -> String -> [(String, String)] -> StateT s IO ByteString
 doGetRequest config method queryPairs = do
@@ -76,11 +77,9 @@ handleUpdate config update = do
     Just "/help" -> sendMessage config chatId (config & helpText) >> return ()
     Just "/repeat" -> onRepeat config chatId >> return ()
     Just text -> onText chatId text
-    Nothing -> doNohting
+    Nothing -> sendMessage config chatId (config & sadText) >> return ()
   DB.setOffset (updateId + 1)
-  where
-    doNohting = do return ()
-    
+  where  
     isKeyboardResponse chatId text = do
       isAwaiting <- DB.isAwaiting chatId
       return $ isAwaiting && (length text == 1 && isDigit (head text))
@@ -102,16 +101,31 @@ handleUpdate config update = do
       DB.delAwaitingChat chatId
 
 loop config = do
+
+  let loopDelay = config & uSecLoopPeriod
   db <- get
+  isTimeToBackup <- isTimeToBackup db 
+  if isTimeToBackup
+    then backUpAndUpdateTimer
+    else do return()
   updates <- getUpdates config
   lift $ print (db)
-  return ()
+ -- return ()
   mapM_ (handleUpdate config) updates
-  lift $ threadDelay 400000
+  lift $ threadDelay loopDelay
   loop config
+  where
+    isTimeToBackup db = do
+      curTime <- lift $ getCurrentTime 
+      return $ diffUTCTime curTime (db & DB.prevTime) > (config & diffTimeBackupPeriod)
+    backUpAndUpdateTimer = do
+      DB.backup "./backup.dat"
+      DB.updateTime
+
 
 start configHandle = do
   config <- (parseConfig configHandle)
-  let initDB = DB.getInitialDatabase (config & defaultRepeatAmount)
+  
+  initDB <- DB.getRestoredOrNewDatabase (config & defaultRepeatAmount) 
   runStateT (loop config) initDB
   return ()

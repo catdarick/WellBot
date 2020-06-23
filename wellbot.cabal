@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 387295597d83db5fd468d1c9f04c545d206410ca501366d7719231740b4a2362
+-- hash: db887ec637f35cdb37670a758912530d9ce27a1c5f029688e8ebc424a6bfd68c
 
 name:           wellbot
 version:        0.1.0.0
@@ -28,6 +28,13 @@ source-repository head
 library
   exposed-modules:
       Lib
+      Telegram.Config
+      Telegram.Database.Interact
+      Telegram.Database.Types
+      Telegram.Interact
+      Telegram.JsonTypes
+      Telegram.Keyboard.Builder
+      Telegram.Keyboard.Types
   other-modules:
       Paths_wellbot
   hs-source-dirs:
@@ -43,20 +50,13 @@ library
     , lens
     , lens-aeson
     , text
+    , time
     , transformers
-    , unix-time
   default-language: Haskell2010
 
 executable wellbot-exe
   main-is: Main.hs
   other-modules:
-      Telegram.Config
-      Telegram.Database.Interact
-      Telegram.Database.Types
-      Telegram.Interact
-      Telegram.JsonTypes
-      Telegram.Keyboard.Builder
-      Telegram.Keyboard.Types
       Paths_wellbot
   hs-source-dirs:
       app
@@ -72,8 +72,8 @@ executable wellbot-exe
     , lens
     , lens-aeson
     , text
+    , time
     , transformers
-    , unix-time
     , wellbot
   default-language: Haskell2010
 
@@ -96,7 +96,7 @@ test-suite wellbot-test
     , lens
     , lens-aeson
     , text
+    , time
     , transformers
-    , unix-time
     , wellbot
   default-language: Haskell2010

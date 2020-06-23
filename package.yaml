@@ -31,7 +31,7 @@ dependencies:
 - aeson-casing
 - aeson
 - transformers
-- unix-time  
+- time 
 library:
   source-dirs: src
 
