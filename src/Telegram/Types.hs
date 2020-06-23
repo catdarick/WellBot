@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Telegram.JsonTypes where
+module Telegram.Types where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -43,7 +43,7 @@ instance FromJSON Message where
 data Update =
   Update
     { updateUpdateId :: Integer
-    , updateMessage  :: Message
+    , updateMessage  :: Maybe Message
     }
   deriving (Generic, Show)
 
