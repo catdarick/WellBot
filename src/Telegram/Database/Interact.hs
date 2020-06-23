@@ -79,20 +79,24 @@ backup path = do
 
 getRestoredOrNewDatabase defaultRepeatsAmount = do
   curTime <- getCurrentTime
-  backupData <- try $ DataByteString.readFile "./backup.dat"
+  eitherData <- try $ DataByteString.readFile "./backup.dat"
   let defaultDB = getInitialDatabase defaultRepeatsAmount curTime
-  case backupData of
-    Left (e :: SomeException) -> return $ defaultDB
-    Right contents -> do
-      let maybeDB = (decode contents) :: Maybe DB
+  either
+    (retDefalut defaultDB)
+    (retRestoredOrDefaultIfCantParse defaultDB curTime)
+    eitherData
+  where
+    setRepAmountAndTime defaultRepeatsAmount curTime db =
+      db {defaultRepeatAmount = defaultRepeatsAmount, prevTime = curTime}
+    retDefalut defaultDB (e :: SomeException) = do
+      return (defaultDB :: DB)
+    retRestoredOrDefaultIfCantParse defaultDB curTime bsData = do
+      let maybeDB = (decode bsData) :: Maybe DB
       return $
         maybe
           defaultDB
           (setRepAmountAndTime defaultRepeatsAmount curTime)
           maybeDB
-  where
-    setRepAmountAndTime defaultRepeatsAmount curTime db =
-      db {defaultRepeatAmount = defaultRepeatsAmount, prevTime = curTime}
 
 getInitialDatabase defaultRepeatsAmount time =
   (DB
