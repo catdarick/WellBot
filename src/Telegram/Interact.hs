@@ -66,6 +66,15 @@ sendMessage config chatId text = do
     textParam = ("text", text)
     queryPairs = [chatIdParam, textParam]
 
+forwardMessage config chatId messageId = do
+  bsResponse <- doGetRequest config "forwardMessage" queryPairs
+  return (decode bsResponse :: Maybe (TgTypes.Response TgTypes.Message))
+  where
+    chatIdParam = ("chat_id", show chatId)
+    messageIdParam = ("message_id", show messageId)
+    fromChatIdParam = ("from_chat_id", show chatId)
+    queryPairs = [chatIdParam, messageIdParam, fromChatIdParam]
+
 sendKyboard config chatId = do
   bsResponse <- doGetRequest config "sendMessage" queryPairs
   return (decode bsResponse :: Maybe (TgTypes.Response TgTypes.Message))
@@ -79,31 +88,35 @@ handleUpdate config update = do
   lift $ print update
   let updateId = update & TgTypes.updateUpdateId
   let maybeText = update & TgTypes.updateMessage & TgTypes.messageText
+  let messageId = update & TgTypes.updateMessage & TgTypes.messageMessageId
   let chatId =
         update & TgTypes.updateMessage & TgTypes.messageChat & TgTypes.chatId
+  repAmount <- DB.getRepeatsAmount chatId
   case maybeText of
     Just "/start" -> sendMessage config chatId (config & helpText) >> return ()
     Just "/help" -> sendMessage config chatId (config & helpText) >> return ()
     Just "/repeat" -> onRepeat config chatId >> return ()
-    Just text -> onText chatId text
-    Nothing -> sendMessage config chatId (config & sadText) >> return ()
+    Just text -> onText chatId text messageId
+    Nothing -> forwardMessageNTimes chatId messageId repAmount >> return ()
   DB.setOffset (updateId + 1)
   where
     isKeyboardResponse chatId text = do
       isAwaiting <- DB.isAwaiting chatId
       return $ isAwaiting && (length text == 1 && isDigit (head text))
     getIntByChar ch = (toInteger $ fromEnum ch - fromEnum '0')
+    forwardMessageNTimes chatId messageId n =
+      replicateM_
+               (fromInteger n)
+               (forwardMessage config chatId messageId)
     onRepeat config chatId = do
       DB.addAwaitingChat chatId
       sendKyboard config chatId
-    onText chatId text = do
+    onText chatId text messageId = do
       repAmount <- DB.getRepeatsAmount chatId
       isKeyboardResponse <- isKeyboardResponse chatId text
       if isKeyboardResponse
         then DB.setRepeatsAmount chatId (getIntByChar (head text))
-        else replicateM_
-               (fromInteger repAmount)
-               (sendMessage config chatId text)
+        else forwardMessageNTimes chatId messageId repAmount
       DB.delAwaitingChat chatId
 
 loop config = do
