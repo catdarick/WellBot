@@ -12,7 +12,7 @@ import Data.Configurator.Types (Config)
 main = do
  -- x <- catch (readFile "/tmp/foo.txt") handler
   eitherCfg <- (try $ load [Required "/home/darick/wellbot/app/bot.cfg"]) -- :: IO (Either SomeException Config)
-  either onExcept (\cfg->Telegram.Interact.start cfg) eitherCfg
+  either onExcept Telegram.Interact.start eitherCfg
   return () 
   where
     onExcept (x::SomeException) = do

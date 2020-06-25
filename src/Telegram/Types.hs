@@ -7,7 +7,7 @@ import           Data.Aeson.Casing
 import           GHC.Generics      (Generic)
 
 -------
-data User =
+newtype User =
   User
     { userId :: Integer
     }
@@ -17,7 +17,7 @@ instance FromJSON User where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
 -------
-data Chat =
+newtype Chat =
   Chat
     { chatId :: Integer
     }
@@ -54,7 +54,9 @@ instance FromJSON Update where
 data Response respType =
   Response
     { responseOk     :: Bool
-    , responseResult :: respType
+    , responseResult :: Maybe respType
+    , responseErrorCode :: Maybe Int
+    , responseDescription :: Maybe String
     }
   deriving (Generic, Show)
 

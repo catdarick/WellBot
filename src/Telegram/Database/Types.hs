@@ -9,22 +9,14 @@ import Data.Map (Map)
 
 type ChatId = Integer
 type RepeatsAmount = Integer 
-
-{- data Chat =
-  Chat
-    { chatID        :: Integer
-    , repeatsAmount :: Integer
-    }
-  deriving (Show, Generic, ToJSON, FromJSON) -}
-
+type Chats = Map ChatId RepeatsAmount
 -------
 data DB =
   DB
     { offset              :: Integer
     , defaultRepeatAmount :: Integer
-    , chats               :: Map ChatId RepeatsAmount
+    , chats               :: Chats
     , awaitingChatsID     :: [Integer]
-    , loopsCount          :: Integer
     , prevTime            :: UTCTime
     }
   deriving (Show, Generic, ToJSON, FromJSON)

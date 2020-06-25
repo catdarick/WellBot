@@ -15,6 +15,7 @@ import           Data.Map                  (delete, lookup)
 import           Data.Time                 (UTCTime, getCurrentTime,
                                             getTime_resolution)
 import           Telegram.Database.Types
+import Data.Maybe (fromMaybe)
 
 setOffset :: Monad m => Integer -> StateT DB m ()
 setOffset newOffset = do
@@ -68,10 +69,7 @@ getRepeatsAmount chatId = do
   chats <- getFromDatabase chats
   defaultRepeatsAmount <- getFromDatabase defaultRepeatAmount
   let res = Data.Map.lookup chatId chats
-  return $ maybe defaultRepeatsAmount id res
-
-getLoopsCount :: StateT DB IO Integer
-getLoopsCount = getFromDatabase loopsCount
+  return $ fromMaybe defaultRepeatsAmount res
 
 updateTime :: StateT DB IO ()
 updateTime = do
@@ -97,8 +95,7 @@ getRestoredOrNewDatabase defaultRepeatsAmount = do
   where
     setRepAmountAndTime defaultRepeatsAmount curTime db =
       db {defaultRepeatAmount = defaultRepeatsAmount, prevTime = curTime}
-    retDefalut defaultDB (e :: SomeException) = do
-      return (defaultDB :: DB)
+    retDefalut defaultDB (e :: SomeException) = return (defaultDB :: DB)
     retRestoredOrDefaultIfCantParse defaultDB curTime bsData = do
       let maybeDB = (decode bsData) :: Maybe DB
       return $
@@ -114,6 +111,5 @@ getInitialDatabase defaultRepeatsAmount time =
      , defaultRepeatAmount = defaultRepeatsAmount
      , chats = empty
      , awaitingChatsID = []
-     , loopsCount = 0
      , prevTime = time
      })
