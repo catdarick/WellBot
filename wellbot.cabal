@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c053e56d598542664c01870f291f28fbbebe2be2ed06bbae5fbfab7cd2dab4e0
+-- hash: 23a24662727acab42381a7fe2fce64925e622fd3f52dce1ffe7e9e595ad8e35a
 
 name:           wellbot
 version:        0.1.0.0
@@ -41,7 +41,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      aeson
+      HUnit
+    , aeson
     , aeson-casing
     , base >=4.7 && <5
     , bytestring
@@ -64,7 +65,8 @@ executable wellbot-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      HUnit
+    , aeson
     , aeson-casing
     , base >=4.7 && <5
     , bytestring
@@ -84,12 +86,15 @@ test-suite wellbot-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Telegram.TestHelpers
+      Telegram.UpdateHandlerTest
       Paths_wellbot
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      HUnit
+    , aeson
     , aeson-casing
     , base >=4.7 && <5
     , bytestring

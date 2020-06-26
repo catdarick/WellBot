@@ -7,7 +7,7 @@ import           Control.Concurrent         (threadDelay)
 import           Control.Exception          (SomeException, catch, try)
 import           Control.Monad              (replicateM, replicateM_, void)
 import           Control.Monad.Trans.Class  (MonadTrans (lift))
-import           Control.Monad.Trans.State  (StateT, get, modify, runStateT)
+import           Control.Monad.Trans.State  (gets, StateT, get, modify, runStateT)
 import           Data.Aeson                 (decode, encode)
 import           Data.ByteString.Char8      (pack)
 import qualified Data.ByteString.Char8      as BS
@@ -18,14 +18,21 @@ import           Data.Function              ((&))
 import           Data.Maybe                 (fromJust, isJust, isNothing)
 import           Data.Time                  (diffUTCTime, getCurrentTime)
 import           GHC.Base                   (Any, when)
-import           Telegram.Api
+import qualified          Telegram.Api               as Api
 import           Telegram.Config
 import qualified Telegram.Database.Interact as DB
 import qualified Telegram.Database.Types    as DB
 import           Telegram.Keyboard.Builder
 import           Telegram.Types
+import qualified Data.ByteString.Lazy.Char8 as LBS
 
-withErrorPrinting :: (Monad (t IO), MonadTrans t, Monoid b) => IO b -> t IO b
+data Handle m a= 
+  Handle
+  { hSendMessage :: Config -> Integer -> String -> m a
+  , hForwardMessage :: Config -> Integer -> Integer -> m a
+  , hForwardMessageNTimes :: Config -> Integer -> Integer -> Integer -> m a
+  , hSendKyboardWithText :: Config -> Integer -> String -> m a
+  } 
 withErrorPrinting f = do
   res <- lift (try f)
   case res of
@@ -34,23 +41,24 @@ withErrorPrinting f = do
       return mempty
     Right x -> return x
 
-onText ::
-     Config -> Integer -> String -> Integer -> Integer -> StateT DB.DB IO ()
-onText config chatId text messageId repAmount = do
+
+onText :: Monoid b => Handle IO b -> Config -> ChatId -> String -> MessageId -> Integer -> StateT DB.DB IO b
+onText h config chatId text messageId repAmount = do
   isKeyboardResponse <- isKeyboardResponse chatId text
-  if isKeyboardResponse
-    then DB.setRepeatsAmount chatId (getIntByChar (head text))
+  res <- if isKeyboardResponse
+    then DB.setRepeatsAmount chatId (getIntByChar (head text)) >> return mempty
     else withErrorPrinting $
-         forwardMessageNTimes config chatId messageId repAmount
+         (h&hForwardMessageNTimes) config chatId messageId repAmount
   DB.delAwaitingChat chatId
+  return res
   where
     isKeyboardResponse chatId text = do
       isAwaiting <- DB.isAwaiting chatId
       return $ isAwaiting && (length text == 1 && isDigit (head text))
     getIntByChar ch = toInteger $ fromEnum ch - fromEnum '0'
 
-handleUpdate :: Config -> Update -> StateT DB.DB IO ()
-handleUpdate config update = do
+handleUpdate :: Monoid b => Handle IO b -> Config -> Update -> StateT DB.DB IO b
+handleUpdate h config update = do
   let updateId = update & updateUpdateId
   let message = fromJust (update & updateMessage)
   let maybeText = message & messageText
@@ -58,34 +66,34 @@ handleUpdate config update = do
   let chatId_ = message & messageChat & chatId
   let helpText_ = config & helpText
   repAmount <- DB.getRepeatsAmount chatId_
-  case maybeText of
-    Just "/start" -> withErrorPrinting $ sendMessage config chatId_ helpText_
-    Just "/help" -> withErrorPrinting $ sendMessage config chatId_ helpText_
+  res <- case maybeText of
+    Just "/start" -> withErrorPrinting $ (h&hSendMessage) config chatId_ helpText_
+    Just "/help" -> withErrorPrinting $ (h&hSendMessage) config chatId_ helpText_
     Just "/repeat" -> onRepeat config chatId_ repAmount
-    Just text -> onText config chatId_ text messageId repAmount
+    Just text -> onText h config chatId_ text messageId repAmount
     Nothing ->
       withErrorPrinting $
-      forwardMessageNTimes config chatId_ messageId repAmount
+      (h&hForwardMessageNTimes) config chatId_ messageId repAmount
   DB.setOffset (updateId + 1)
+  return res
   where
     repeatText_ repAmount = (config & repeatText) ++ show repAmount
     onRepeat config chatId repAmount = do
       DB.addAwaitingChat chatId
       withErrorPrinting $
-        sendKyboardWithText config chatId (repeatText_ repAmount)
+        (h&hSendKyboardWithText) config chatId (repeatText_ repAmount)
 
-loop :: Config -> StateT DB.DB IO b
-loop config = do
-  db <- get
-  let offset = db & DB.offset
+loop :: Monoid b1 => Handle IO b1 -> Config -> StateT DB.DB IO b2
+loop h config = do
+  offset <- gets DB.offset
   isTimeToBackup <- isTimeToBackup
   when isTimeToBackup backUpAndUpdateTimer
-  updates <- withErrorPrinting $ getUpdates config offset
+  updates <- withErrorPrinting $ Api.getUpdates config offset
   let filtredUpdates = filter isJustMessage updates
-  mapM_ (handleUpdate config) filtredUpdates
-  loop config
+  mapM_ (handleUpdate h config) filtredUpdates
+  lift $ threadDelay loopDelay
+  loop h config
   where
-    printError = (print :: SomeException -> IO ())
     isJustMessage Update {updateMessage = maybeMessage} = isJust maybeMessage
     loopDelay = config & uSecLoopPeriod
     isTimeToBackup = do
@@ -96,9 +104,16 @@ loop config = do
       DB.backup "./backup.dat"
       DB.updateTime
 
+
 start :: DataConfigurator.Config -> IO ()
 start configHandle = do
   config <- (parseConfig configHandle)
+  print config
   initDB <- DB.getRestoredOrNewDatabase (config & defaultRepeatAmount)
-  runStateT (loop config) initDB
+  let h = Handle {hSendMessage = Api.sendMessage
+  , hForwardMessage = Api.forwardMessage
+  , hForwardMessageNTimes = Api.forwardMessageNTimes
+  , hSendKyboardWithText = Api.sendKyboardWithText}
+
+  runStateT (loop h config) initDB
   return ()

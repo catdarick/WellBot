@@ -33,6 +33,7 @@ dependencies:
 - transformers
 - containers
 - time 
+- HUnit
 library:
   source-dirs: src
 

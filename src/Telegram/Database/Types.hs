@@ -19,4 +19,4 @@ data DB =
     , awaitingChatsID     :: [Integer]
     , prevTime            :: UTCTime
     }
-  deriving (Show, Generic, ToJSON, FromJSON)
+  deriving (Show, Generic, ToJSON, FromJSON, Eq)

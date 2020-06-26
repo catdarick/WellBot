@@ -6,6 +6,8 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           GHC.Generics      (Generic)
 
+type ChatId = Integer
+type MessageId = Integer
 -------
 newtype User =
   User

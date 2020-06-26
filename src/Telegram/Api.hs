@@ -10,9 +10,8 @@ import           Control.Monad               (replicateM, replicateM_, unless)
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Control.Monad.Trans.State   (StateT, get, modify, runStateT)
 import           Data.Aeson                  (decode, encode)
-import           Data.ByteString.Char8       (pack)
 import qualified Data.ByteString.Char8       as BS
-import           Data.ByteString.Lazy.Char8  (ByteString, fromStrict, unpack)
+import qualified Data.ByteString.Lazy.Char8  as LBS
 import           Data.Char                   (isDigit)
 import qualified Data.Configurator.Types     as DataConfigurator
 import           Data.Function               ((&))
@@ -30,20 +29,25 @@ import qualified Telegram.Database.Types     as DB
 import           Telegram.Keyboard.Builder
 import           Telegram.Types
 
-doGetRequest :: Config -> String -> [(String, String)] -> IO ByteString
+{- data Handle =
+  Handle
+    { hGetResponse :: Conduit.Request -> IO (Response ByteString)
+    }
+ -}
+doGetRequest :: Config -> String -> [(String, String)] -> IO LBS.ByteString
 doGetRequest config method queryPairs = do
   initReq <- Conduit.parseRequest "https://api.telegram.org"
   let req = setPathAndQueryString initReq bsUrlPath bsQueryPairs
   bsResponse <- httpBS req
   returnResponseBody bsResponse
   where
-    stringPairToByteStringPair (k, v) = (pack k, Just $ pack v)
-    bsUrlPath = pack ("bot" ++ (config & tgToken) ++ "/" ++ method)
+    stringPairToByteStringPair (k, v) = (BS.pack k, Just $ BS.pack v)
+    bsUrlPath = BS.pack ("bot" ++ (config & tgToken) ++ "/" ++ method)
     setPath reqVal path = reqVal {Conduit.path = path}
     setPathAndQueryString req path query =
       Conduit.setQueryString query (setPath req bsUrlPath)
     bsQueryPairs = map stringPairToByteStringPair queryPairs
-    returnResponseBody x = return $ fromStrict $ Conduit.responseBody x
+    returnResponseBody x = return $ LBS.fromStrict $ Conduit.responseBody x
 
 isResponseOk :: Maybe (Response respType) -> Bool
 isResponseOk = maybe False getOkFromResponse
@@ -72,15 +76,15 @@ throwIfError maybeResponse errorLocation =
 
 getUpdates :: Config -> Integer -> IO [Update]
 getUpdates config offset = do
-  let offsetParam = ("offset", show offset)
   bsResponse <- doGetRequest config "getUpdates" [offsetParam]
   let maybeResponse = (decode bsResponse :: Maybe (Response [Update]))
   throwIfError maybeResponse "getUpdates"
   return $ maybe [] getUpdatesFromResult maybeResponse
   where
     getUpdatesFromResult maybeRes = fromMaybe [] (maybeRes & responseResult)
+    offsetParam = ("offset", show offset)
 
-sendMessage :: Config -> Integer -> String -> IO ()
+sendMessage :: Config -> ChatId -> String -> IO ()
 sendMessage config chatId text = do
   bsResponse <- doGetRequest config "sendMessage" queryPairs
   let maybeResponse = decode bsResponse :: Maybe (Response Message)
@@ -90,7 +94,7 @@ sendMessage config chatId text = do
     textParam = ("text", text)
     queryPairs = [chatIdParam, textParam]
 
-forwardMessage :: Config -> Integer -> Integer -> IO ()
+forwardMessage :: Config -> ChatId -> MessageId -> IO ()
 forwardMessage config chatId messageId = do
   bsResponse <- doGetRequest config "forwardMessage" queryPairs
   let maybeResponse = decode bsResponse :: Maybe (Response Message)
@@ -101,11 +105,11 @@ forwardMessage config chatId messageId = do
     fromChatIdParam = ("from_chat_id", show chatId)
     queryPairs = [chatIdParam, messageIdParam, fromChatIdParam]
 
-forwardMessageNTimes :: Config -> Integer -> Integer -> Integer -> IO ()
+forwardMessageNTimes :: Config -> ChatId -> MessageId -> Integer -> IO ()
 forwardMessageNTimes config chatId messageId n =
   replicateM_ (fromInteger n) (forwardMessage config chatId messageId)
 
-sendKyboardWithText :: Config -> Integer -> String -> IO ()
+sendKyboardWithText :: Config -> ChatId -> String -> IO ()
 sendKyboardWithText config chatId text = do
   bsResponse <- doGetRequest config "sendMessage" queryPairs
   let maybeResponse = decode bsResponse :: Maybe (Response Message)

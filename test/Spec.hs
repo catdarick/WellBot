@@ -1,2 +1,7 @@
+import           Telegram.UpdateHandlerTest
+import           Test.HUnit                 (runTestTT)
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  runTestTT tests
+  return ()
