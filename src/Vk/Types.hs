@@ -42,6 +42,7 @@ instance FromJSON Update where
 data Message =
   Message
     { messageFromId :: Integer
+    , messageId     :: Integer
     , messageText   :: Maybe String
     }
   deriving (Generic, Show, Eq)

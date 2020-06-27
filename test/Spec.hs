@@ -1,7 +1,9 @@
-import           Telegram.UpdateHandlerTest
+import qualified Telegram.UpdateHandlerTest as TG
 import           Test.HUnit                 (runTestTT)
+import qualified Vk.UpdateHandlerTest       as VK
 
 main :: IO ()
 main = do
-  runTestTT tests
+  runTestTT TG.tests
+  runTestTT VK.tests
   return ()
