@@ -4,7 +4,7 @@ import           Control.Monad.Trans.State (StateT (runStateT))
 import           Data.Function             ((&))
 import           Data.Functor.Identity     (Identity (Identity), runIdentity)
 import           Data.Text.Unsafe          (inlinePerformIO)
-import           Telegram.Config
+import           Config
 import qualified Telegram.Database.Types   as DB
 import           Telegram.Interact
 import           Telegram.TestHelpers

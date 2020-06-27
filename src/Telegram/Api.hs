@@ -23,7 +23,7 @@ import           GHC.Exception               (errorCallException)
 import qualified Network.HTTP.Client.Conduit as Conduit
 import qualified Network.HTTP.Conduit        as Conduit
 import           Network.HTTP.Simple         (httpBS)
-import           Telegram.Config
+import           Config
 import qualified Telegram.Database.Interact  as DB
 import qualified Telegram.Database.Types     as DB
 import           Telegram.Keyboard.Builder
@@ -41,12 +41,13 @@ doGetRequest config method queryPairs = do
   bsResponse <- httpBS req
   returnResponseBody bsResponse
   where
+    timeoutQueryPair = ("timeout", show $ config & secTimeout)
     stringPairToByteStringPair (k, v) = (BS.pack k, Just $ BS.pack v)
     bsUrlPath = BS.pack ("bot" ++ (config & tgToken) ++ "/" ++ method)
     setPath reqVal path = reqVal {Conduit.path = path}
     setPathAndQueryString req path query =
       Conduit.setQueryString query (setPath req bsUrlPath)
-    bsQueryPairs = map stringPairToByteStringPair queryPairs
+    bsQueryPairs = map stringPairToByteStringPair (timeoutQueryPair:queryPairs)
     returnResponseBody x = return $ LBS.fromStrict $ Conduit.responseBody x
 
 isResponseOk :: Maybe (Response respType) -> Bool

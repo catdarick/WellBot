@@ -1,7 +1,7 @@
 module Telegram.Keyboard.Builder where
 
 import Telegram.Keyboard.Types
-import Telegram.Config
+import Config
 import Data.Function ((&))
 import Data.Aeson (encode)
 import Data.ByteString.Lazy.Char8 (unpack)

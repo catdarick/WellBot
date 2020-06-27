@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 23a24662727acab42381a7fe2fce64925e622fd3f52dce1ffe7e9e595ad8e35a
+-- hash: c65351c3eeeaeaef45a9a0565e5ecc535189c1753da8d3925418a95afedada01
 
 name:           wellbot
 version:        0.1.0.0
@@ -27,15 +27,20 @@ source-repository head
 
 library
   exposed-modules:
+      Config
       Lib
       Telegram.Api
-      Telegram.Config
       Telegram.Database.Interact
       Telegram.Database.Types
       Telegram.Interact
       Telegram.Keyboard.Builder
       Telegram.Keyboard.Types
       Telegram.Types
+      Vk.Api
+      Vk.Database.Interact
+      Vk.Database.Types
+      Vk.Interact
+      Vk.Types
   other-modules:
       Paths_wellbot
   hs-source-dirs:
@@ -52,6 +57,7 @@ library
     , http-conduit
     , lens
     , lens-aeson
+    , random
     , text
     , time
     , transformers
@@ -76,6 +82,7 @@ executable wellbot-exe
     , http-conduit
     , lens
     , lens-aeson
+    , random
     , text
     , time
     , transformers
@@ -104,6 +111,7 @@ test-suite wellbot-test
     , http-conduit
     , lens
     , lens-aeson
+    , random
     , text
     , time
     , transformers

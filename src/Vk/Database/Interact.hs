@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Telegram.Database.Interact where
+module Vk.Database.Interact where
 
 import           Control.Exception         (SomeException, try)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
@@ -14,16 +14,17 @@ import           Data.Map                  (Map, adjust, empty, insert)
 import           Data.Map                  (delete, lookup)
 import           Data.Time                 (UTCTime, getCurrentTime,
                                             getTime_resolution)
-import           Telegram.Database.Types
+import           Vk.Database.Types
 import Data.Maybe (fromMaybe)
 
-setOffset :: Monad m => Integer -> StateT DB m ()
+setOffset :: Monad m => String -> StateT DB m ()
 setOffset newOffset = do
   db <- get
   put (db {offset = newOffset})
 
 addAwaitingChat :: Monad m => Integer -> StateT DB m ()
-addAwaitingChat chatId =  modify (\db@DB {awaitingChatsID = xs} -> db {awaitingChatsID = chatId : xs})
+addAwaitingChat chatId = do
+  modify (\db@DB {awaitingChatsID = xs} -> db {awaitingChatsID = chatId : xs})
 
 isAwaiting :: Monad m => Integer -> StateT DB m Bool
 isAwaiting chatId = do
@@ -40,6 +41,15 @@ setNewChats :: Map ChatId RepeatsAmount -> StateT DB IO ()
 setNewChats newChats = do
   db <- get
   put (db {chats = newChats})
+
+setToken :: Monad m => String -> StateT DB m ()
+setToken token = do
+  db <- get
+  put (db {accessToken = token})
+
+setServer server = do
+  db <- get
+  put (db {server = server})  
 
 delAwaitingChat :: Integer -> StateT DB IO ()
 delAwaitingChat chatId = do
@@ -82,7 +92,7 @@ backup path = do
   let bsDB = encode db
   lift $ DataByteString.writeFile path bsDB
 
---getRestoredOrNewDatabase :: FilePath -> Integer -> IO DB
+getRestoredOrNewDatabase :: FilePath -> Integer -> IO DB
 getRestoredOrNewDatabase path defaultRepeatsAmount = do
   curTime <- getCurrentTime
   eitherData <- try $ DataByteString.readFile path
@@ -106,9 +116,11 @@ getRestoredOrNewDatabase path defaultRepeatsAmount = do
 getInitialDatabase :: Integer -> UTCTime -> DB
 getInitialDatabase defaultRepeatsAmount time =
   (DB
-     { offset = 0
+     { offset = "0"
      , defaultRepeatAmount = defaultRepeatsAmount
      , chats = empty
      , awaitingChatsID = []
      , prevTime = time
+     , accessToken = ""
+     , server = ""
      })

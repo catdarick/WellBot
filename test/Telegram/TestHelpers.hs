@@ -3,7 +3,7 @@ module Telegram.TestHelpers where
 import           Data.Map                (fromList)
 import           Data.Time               (UTCTime (UTCTime), utctDay,
                                           utctDayTime)
-import           Telegram.Config
+import           Config
 import qualified Telegram.Database.Types as DB
 import           Telegram.Interact
 import           Telegram.Types
@@ -16,7 +16,7 @@ config =
     , sadText = ""
     , keysAmount = 5
     , defaultRepeatAmount = 1
-    , uSecLoopPeriod = 400000
+    , secTimeout = 10
     , diffTimeBackupPeriod = 10
     }
 
