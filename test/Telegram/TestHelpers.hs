@@ -18,6 +18,9 @@ config =
     , defaultRepeatAmount = 1
     , secTimeout = 10
     , diffTimeBackupPeriod = 10
+    , vkApiVersion = ""
+    , vkToken = ""
+    , vkGroupId = 444
     }
 
 getDb withAwaiting withAlreadySettedRepeats repeatsAmount offset =

@@ -70,3 +70,12 @@ data Objectt =
 
 instance FromJSON Objectt where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+-------
+data Error = 
+  Error
+  {errorFailed::Integer}
+    deriving (Generic, Show, Eq)
+
+instance FromJSON Error where
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase

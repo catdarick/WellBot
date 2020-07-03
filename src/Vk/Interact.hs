@@ -24,7 +24,8 @@ data Handle m a =
     , hForwardMessage       :: Config -> Integer -> Integer -> m a
     , hForwardMessageNTimes :: Config -> Integer -> Integer -> Integer -> m a
     , hSendKyboardWithText  :: Config -> Integer -> String -> m a
-    } 
+    }
+
 --handleUpdate :: Monoid b => Handle IO b -> Config -> Update -> StateT DB.DB IO b
 withErrorPrinting f = do
   res <- lift (try f)
@@ -41,7 +42,7 @@ onText h config userId text messageId repAmount = do
       then DB.setRepeatsAmount userId (getIntByChar (head text)) >>
            return mempty
       else withErrorPrinting $
-           (h&hForwardMessageNTimes) config userId messageId repAmount
+           (h & hForwardMessageNTimes) config userId messageId repAmount
   DB.delAwaitingChat userId
   return res
   where
@@ -50,8 +51,9 @@ onText h config userId text messageId repAmount = do
       return $ isAwaiting && (length text == 1 && isDigit (head text))
     getIntByChar ch = toInteger $ fromEnum ch - fromEnum '0'
 
-handleUpdate h config update = do
+handleUpdate h config update
   --lift $ print update
+ = do
   let message = fromJust $ update & updateObject & objecttMessage
   let maybeText = message & messageText
   let userId = message & messageFromId
@@ -59,19 +61,21 @@ handleUpdate h config update = do
   let messageId_ = message & messageId
   repAmount <- DB.getRepeatsAmount userId
   case maybeText of
-    Just "/start" -> withErrorPrinting $ (h&hSendMessage) config userId helpText_
-    Just "/help" -> withErrorPrinting $ (h&hSendMessage) config userId helpText_
+    Just "/start" ->
+      withErrorPrinting $ (h & hSendMessage) config userId helpText_
+    Just "/help" ->
+      withErrorPrinting $ (h & hSendMessage) config userId helpText_
     Just "/repeat" -> onRepeat config userId repAmount
     Just text -> onText h config userId text messageId_ repAmount
     Nothing ->
       withErrorPrinting $
-      (h&hForwardMessageNTimes) config userId messageId_ repAmount
+      (h & hForwardMessageNTimes) config userId messageId_ repAmount
   where
     repeatText_ repAmount = (config & repeatText) ++ show repAmount
     onRepeat config userId repAmount = do
       DB.addAwaitingChat userId
       withErrorPrinting $
-        (h&hSendKyboardWithText) config userId (repeatText_ repAmount)
+        (h & hSendKyboardWithText) config userId (repeatText_ repAmount)
 
 loop h config = do
   offset <- gets DB.offset
@@ -80,11 +84,14 @@ loop h config = do
   server <- gets DB.server
   token <- gets DB.accessToken
   offset <- gets DB.offset
-  updatesAndOffset <-
+  maybeUpdatesAndOffset <-
     withErrorPrinting $ Api.getUpdatesAndOffset config server offset token
-  DB.setOffset (snd updatesAndOffset)
-  let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
-  handleUpdates filtredUpdates
+  case maybeUpdatesAndOffset of
+    Just updatesAndOffset -> do
+      DB.setOffset (snd updatesAndOffset)
+      let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
+      handleUpdates filtredUpdates
+    Nothing -> updateServerAndTokenAndOffset config
   loop h config
   where
     handleUpdates = mapM_ (handleUpdate h config)
@@ -97,6 +104,19 @@ loop h config = do
       DB.backup "./backupVK.dat"
       DB.updateTime
 
+updateServerAndTokenAndOffset :: Config -> StateT DB.DB IO ()
+updateServerAndTokenAndOffset config = do
+  eitherMaybeResponse <- lift $ try $ Api.getServerAndTokenAndOffset config
+  case eitherMaybeResponse of
+    Left (e :: SomeException) -> lift $ print e
+    Right maybeResponse ->
+      case maybeResponse of
+        Just response -> do
+          DB.setServer $ response & responseResponse & longpollServer
+          DB.setToken $ response & responseResponse & longpollKey
+          DB.setOffset $ response & responseResponse & longpollTs
+        Nothing -> lift $ print "Cannot get server and token for LongPolling"
+
 start :: DataConfigurator.Config -> IO ()
 start configHandle = do
   config <- (parseConfig configHandle)
@@ -108,13 +128,13 @@ start configHandle = do
           , hForwardMessage = Api.forwardMessage
           , hForwardMessageNTimes = Api.forwardMessageNTimes
           , hSendKyboardWithText = Api.sendKeyboardWithText
-          } 
+          }
   --runStateT (loop h config) initDB
   res <- runStateT (initAndGoLoop h config) initDB
   --print res
   return ()
   where
     initAndGoLoop h config = do
-      Api.updateServerAndTokenAndOffset config
+      updateServerAndTokenAndOffset config
       lift $ print "going to the loop"
       loop h config
