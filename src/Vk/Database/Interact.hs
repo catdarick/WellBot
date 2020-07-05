@@ -17,6 +17,7 @@ import           Data.Time                 (UTCTime, getCurrentTime,
 import           Vk.Database.Types
 import Data.Maybe (fromMaybe)
 
+
 setOffset :: Monad m => String -> StateT DB m ()
 setOffset newOffset = do
   db <- get

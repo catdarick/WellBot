@@ -29,10 +29,11 @@ import           Telegram.Types
 
 data Handle m a =
   Handle
-    { hSendMessage          :: Config -> Integer -> String -> m a
-    , hForwardMessage       :: Config -> Integer -> Integer -> m a
-    , hForwardMessageNTimes :: Config -> Integer -> Integer -> Integer -> m a
-    , hSendKyboardWithText  :: Config -> Integer -> String -> m a
+    { hSendMessage          :: Api.Handle -> Integer -> String -> m a
+    , hForwardMessage       :: Api.Handle -> Integer -> Integer -> m a
+    , hForwardMessageNTimes :: Api.Handle -> Integer -> Integer -> Integer -> m a
+    , hSendKyboardWithText  :: Api.Handle -> Integer -> String -> m a
+    , hApi :: Api.Handle
     }
 
 withErrorPrinting f = do
@@ -53,13 +54,14 @@ onText ::
   -> Integer
   -> StateT DB.DB IO b
 onText h config chatId text messageId repAmount = do
+  let hApi_ = h & hApi
   isKeyboardResponse <- isKeyboardResponse chatId text
   res <-
     if isKeyboardResponse
       then DB.setRepeatsAmount chatId (getIntByChar (head text)) >>
            return mempty
       else withErrorPrinting $
-           (h & hForwardMessageNTimes) config chatId messageId repAmount
+           (h & hForwardMessageNTimes) hApi_ chatId messageId repAmount
   DB.delAwaitingChat chatId
   return res
   where
@@ -74,20 +76,21 @@ handleUpdate h config update = do
   let message = fromJust (update & updateMessage)
   let maybeText = message & messageText
   let messageId = message & messageMessageId
+  let hApi_ = h & hApi
   let chatId_ = message & messageChat & chatId
   let helpText_ = config & helpText
   repAmount <- DB.getRepeatsAmount chatId_
   res <-
     case maybeText of
       Just "/start" ->
-        withErrorPrinting $ (h & hSendMessage) config chatId_ helpText_
+        withErrorPrinting $ (h & hSendMessage) hApi_ chatId_ helpText_
       Just "/help" ->
-        withErrorPrinting $ (h & hSendMessage) config chatId_ helpText_
-      Just "/repeat" -> onRepeat config chatId_ repAmount
+        withErrorPrinting $ (h & hSendMessage) hApi_ chatId_ helpText_
+      Just "/repeat" -> onRepeat hApi_ chatId_ repAmount
       Just text -> onText h config chatId_ text messageId repAmount
       Nothing ->
         withErrorPrinting $
-        (h & hForwardMessageNTimes) config chatId_ messageId repAmount
+        (h & hForwardMessageNTimes) hApi_ chatId_ messageId repAmount
   DB.setOffset (updateId + 1)
   return res
   where
@@ -99,11 +102,12 @@ handleUpdate h config update = do
 
 loop :: Monoid b1 => Handle IO b1 -> Config -> StateT DB.DB IO b2
 loop h config = do
+  let hApi_ = h & hApi
   lift $ print "loop"
   offset <- gets DB.offset
   isTimeToBackup <- isTimeToBackup
   when isTimeToBackup backUpAndUpdateTimer
-  updates <- withErrorPrinting $ Api.getUpdates config offset
+  updates <- withErrorPrinting $ Api.getUpdates hApi_ offset
   let filtredUpdates = filter isJustMessage updates
   handleUpdates filtredUpdates
   loop h config
@@ -121,13 +125,15 @@ loop h config = do
 start :: DataConfigurator.Config -> IO ()
 start configHandle = do
   config <- (parseConfig configHandle)
+  apiConfig <- (Api.parseConfig configHandle)
   initDB <- DB.getRestoredOrNewDatabase "./backup.dat" (config & defaultRepeatAmount)
   let h =
         Handle
-          { hSendMessage = Api.sendMessage
+          { hSendMessage = Api.sendMessage 
           , hForwardMessage = Api.forwardMessage
           , hForwardMessageNTimes = Api.forwardMessageNTimes
           , hSendKyboardWithText = Api.sendKyboardWithText
+          , hApi = Api.Handle{Api.hConfig = apiConfig}
           }
   runStateT (loop h config) initDB
   return ()

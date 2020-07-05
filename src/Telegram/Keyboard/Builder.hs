@@ -6,13 +6,12 @@ import Data.Function ((&))
 import Data.Aeson (encode)
 import Data.ByteString.Lazy.Char8 (unpack)
 
-getKeyboardJSON :: Config -> String
-getKeyboardJSON config = do
-  let kAmount = config & keysAmount
+getKeyboardJSON :: Int -> String
+getKeyboardJSON keysAmount = do
   unpack $
     encode $
     Replykeyboardmarkup
-      { replykeyboardmarkupKeyboard = [map intToKey [1,2 .. kAmount]]
+      { replykeyboardmarkupKeyboard = [map intToKey [1,2 .. keysAmount]]
       , replykeyboardmarkupOneTimeKeyboard = True
       , replykeyboardmarkupResizeKeyboard = True
       }
