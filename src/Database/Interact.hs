@@ -13,84 +13,90 @@ import           Database.Types
 import           Control.Exception         (SomeException, try)
 import           Data.Aeson                (FromJSON, decode)
 
+import           Class.Bot                 (ReadShow)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
 import qualified Data.ByteString.Lazy      as DataByteString
 import           Data.Map                  (fromList)
-import           Data.Time                 (getCurrentTime)
+import           Data.Time                 (UTCTime, getCurrentTime)
 import           Text.Read                 (readMaybe)
 
+type BotState a b = StateT (Database a b)
+
+setOffset :: Monad m => offsetType -> BotState offsetType additionalInfoType m ()
 setOffset newOffset = do
   db <- get
   put (db {offset = newOffset})
 
---isAwaiting :: Monad m => Integer -> StateT (Database a b) m Bool
+
+isAwaiting :: Monad m => Integer -> BotState offsetType additionalInfoType m Bool
 isAwaiting chatId = do
   db <- get
-  let awChatsVal = (db & awaitingChatsID)
+  let awChatsVal = db & awaitingChatsID
   return $ chatId `elem` awChatsVal
 
---getRepeatsAmount :: Config -> Integer -> StateT (Database a b) IO Integer
+
+getRepeatsAmount :: Monad m => Config -> Integer -> BotState offsetType additionalInfoType m Integer
 getRepeatsAmount config userOrChatId = do
   chats <- gets chats
   let defaultRepeatsAmount = config & defaultRepeatAmount
   let res = Data.Map.lookup userOrChatId chats
   return $ fromMaybe defaultRepeatsAmount res
 
---delAwaitingChat :: Integer -> StateT (Database a b) IO ()
+delAwaitingChat :: Monad m => Integer -> BotState offsetType additionalInfoType m ()
 delAwaitingChat chatId = do
   db <- get
-  let awChatsVal = (db & awaitingChatsID)
-  let newChatsVal = [x | x <- awChatsVal, x /= chatId]
+  let awChatsVal = db & awaitingChatsID
+  let newChatsVal = filter (chatId/=) awChatsVal--[x | x <- awChatsVal, x /= chatId]
   put (db {awaitingChatsID = newChatsVal})
+  
 
---addAwaitingChat :: Monad m => Integer -> StateT (Database a b) m ()
+addAwaitingChat :: Monad m => Integer -> BotState offsetType additionalInfoType m ()
 addAwaitingChat chatId =
   modify
     (\db@Database {awaitingChatsID = xs} -> db {awaitingChatsID = chatId : xs})
 
---addChat :: Integer -> Integer -> StateT (Database a b) IO ()
+
+addChat :: Monad m => ChatId -> RepeatsAmount -> BotState offsetType additionalInfoType m ()
 addChat chatId repAmount = do
   chatsOld <- gets chats
   setNewChats $ insert chatId repAmount chatsOld
 
---setNewChats :: Map ChatId RepeatsAmount -> StateT (Database a b) IO ()
+
+setNewChats :: Monad m => Chats -> BotState offsetType additionalInfoType m ()
 setNewChats newChats = do
   db <- get
   put (db {chats = newChats})
 
---delChat :: Integer -> StateT (Database a b) IO ()
+
+delChat :: Monad m => ChatId -> BotState offsetType additionalInfoType m ()
 delChat chatId = do
   chatsOld <- gets chats
   setNewChats $ delete chatId chatsOld
 
---setRepeatsAmount :: Integer -> Integer -> StateT (Database a b) IO ()
+
+setRepeatsAmount ::
+     Monad m
+  => ChatId
+  -> RepeatsAmount
+  -> BotState offsetType additionalInfoType m ()
 setRepeatsAmount chatId repAmount = do
   delChat chatId
   addChat chatId repAmount
 
-updateTime ::
-     ( Read offsetType
-     , Read additionalInfoType
-     , Show offsetType
-     , Show additionalInfoType
-     )
-  => StateT (Database offsetType additionalInfoType) IO ()
+updateTime :: StateT (Database a b) IO ()
 updateTime = do
   db <- get
-  newTime <- lift $ getCurrentTime
+  newTime <- lift getCurrentTime
   put (db {prevTime = newTime})
 
+backup :: Show a => FilePath -> StateT a IO ()
 backup path = do
   db <- get
   let strDB = show db
   lift $ writeFile path strDB
 
 getRestoredOrClearDatabase ::
-     ( Read offsetType
-     , Read additionalInfoType
-     , Show offsetType
-     , Show additionalInfoType
-     )
+     ReadShow offsetType additionalInfoType
   => FilePath
   -> offsetType
   -> IO (Database offsetType additionalInfoType)
@@ -107,9 +113,11 @@ getRestoredOrClearDatabase path defaultOffset = do
     retDefalut (defaultDB :: (Database a b)) (e :: SomeException) =
       return defaultDB
     retRestoredOrDefaultIfCantParse defaultDB curTime text = do
-      let maybeDB = (readMaybe text)
+      let maybeDB = readMaybe text
       return $ maybe defaultDB (setTime curTime) maybeDB
 
+getInitialDatabase ::
+     offsetType -> UTCTime -> Database offsetType additionalInfoType
 getInitialDatabase defaultOffset curTime =
   Database
     { offset = defaultOffset

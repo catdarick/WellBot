@@ -1,11 +1,10 @@
-{-# LANGUAGE DatatypeContexts #-}
-
 module Database.Types where
 
 import           Data.Aeson.Types (FromJSON, ToJSON)
 import           Data.Map         (Map)
 import           Data.Time        (UTCTime)
 import           GHC.Generics     (Generic)
+import Control.Monad.Trans.State (StateT)
 
 type ChatId = Integer
 
@@ -13,12 +12,7 @@ type RepeatsAmount = Integer
 
 type Chats = Map ChatId RepeatsAmount
 
-data ( Read offsetType
-     , Show offsetType
-     , Read additionalInfoType
-     , Show additionalInfoType
-     ) =>
-     Database offsetType additionalInfoType =
+data Database offsetType additionalInfoType =
   Database
     { offset          :: offsetType
     , chats           :: Chats

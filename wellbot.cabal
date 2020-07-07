@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 173bc24cf180aeb1fe06f6af16a5820aeabbf81ef23e2df472fca0ca7e8ab111
+-- hash: 7e23bd82a0d345793273ef93bccc541a3da04c12e7168617a38f29d1f58d2a57
 
 name:           wellbot
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       Config
       Database.Interact
       Database.Types
+      ErrorHandler
       Lib
       Logger
       Logic

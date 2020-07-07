@@ -5,7 +5,7 @@ module Telegram.Types where
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           GHC.Generics      (Generic)
-import qualified Class.Update as Class
+
 import Data.Maybe (fromJust)
 type ChatId = Integer
 type MessageId = Integer
@@ -53,10 +53,7 @@ data Update =
 instance FromJSON Update where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
-instance Class.Update Update where
-  getMaybeText = messageText . fromJust .updateMessage
-  getUserOrChatId = chatId . messageChat . fromJust .updateMessage
-  getMessageId = messageMessageId . fromJust .updateMessage
+
 -------
 data Response respType =
   Response

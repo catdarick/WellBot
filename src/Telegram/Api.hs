@@ -27,11 +27,7 @@ import           Config
 import           Telegram.Keyboard.Builder
 import           Telegram.Types
 
-{- data Handle =
-  Handle
-    { hGetResponse :: Conduit.Request -> IO (Response ByteString)
-    }
- -}
+
 doGetRequest :: Config -> String -> [(String, String)] -> IO LBS.ByteString
 doGetRequest config method queryPairs = do
   initReq <- Conduit.parseRequest "https://api.telegram.org"

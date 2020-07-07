@@ -1,6 +1,8 @@
 {-# LANGUAGE AllowAmbiguousTypes    #-}
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE TypeFamilies           #-}
 
 module Class.Bot where
@@ -13,6 +15,12 @@ import           Database.Types
 type UserOrChatId = Integer
 
 type MesssageId = Integer
+
+type RepeatsAmount = Integer
+
+type ReadShow a b = (Read a, Show a, Read b, Show b)
+
+type BotFriendly a u = (Bot a u, ReadShow (OffsetType a) (AdditionalType a))
 
 type BotState a m = StateT (Database (OffsetType a) (AdditionalType a)) m
 

@@ -10,9 +10,10 @@ import           Control.Exception         (SomeException, try)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
 import           Control.Monad.Trans.State (gets, modify)
 import           Data.Function             ((&))
-import           Data.Maybe                (isJust, fromJust)
+import           Data.Maybe                (fromJust, isJust)
 import qualified Database.Interact         as DB
 import qualified Database.Types            as DB
+import           ErrorHandler
 import qualified Vk.Api                    as Vk
 import qualified Vk.Types                  as Vk
 
@@ -40,17 +41,16 @@ instance Bot VkBot Vk.Update where
     token <- gets $ longpollToken . fromJust . DB.additionalInfo
     offset <- gets DB.offset
     maybeUpdatesAndOffset <-
-      lift $ Vk.getUpdatesAndOffset config server offset token
+      withErrorPrinting $ Vk.getUpdatesAndOffset config server offset token
     case maybeUpdatesAndOffset of
-      Just updatesAndOffset -> do 
-          let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
-          return (filtredUpdates, snd updatesAndOffset)
+      Just updatesAndOffset -> do
+        let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
+        return (filtredUpdates, snd updatesAndOffset)
       Nothing -> do
         updateServerAndTokenAndOffset config
         return ([], offset)
-   where
-        isJustMessage = isJust . Vk.objecttMessage . Vk.updateObject
-
+    where
+      isJustMessage = isJust . Vk.objecttMessage . Vk.updateObject
 
 updateServerAndTokenAndOffset config = do
   eitherMaybeResponse <- lift $ try $ Vk.getServerAndTokenAndOffset config

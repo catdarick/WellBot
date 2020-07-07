@@ -1,12 +1,15 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Logic where
 
 import           Class.Bot
 import           Class.Update
 import           Config
-import           Control.Monad             (replicateM_, when)
+import           Control.Exception         (SomeException, try)
+import           Control.Monad             (replicateM_, void, when)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
 import           Control.Monad.Trans.State (StateT (runStateT), gets)
 import           Data.Char                 (isDigit)
@@ -16,42 +19,57 @@ import           Data.Maybe                (fromMaybe)
 import           Data.Time                 (diffUTCTime, getCurrentTime)
 import qualified Database.Interact         as DB
 import qualified Database.Types            as DB
+import           ErrorHandler
 
+forwardMessageNTimes ::
+     Bot a u
+  => a
+  -> Config
+  -> UserOrChatId
+  -> MesssageId
+  -> RepeatsAmount
+  -> IO ()
 forwardMessageNTimes bot config userOrChatId messageId n =
   replicateM_ (fromInteger n) (forwardMessage bot config userOrChatId messageId)
 
+onRepeat ::
+     BotFriendly a u
+  => a
+  -> Config
+  -> UserOrChatId
+  -> RepeatsAmount
+  -> BotState a IO ()
 onRepeat bot config userOrChatId repAmount = do
   let repeatText_ repAmount = (config & repeatText) ++ show repAmount
   DB.addAwaitingChat userOrChatId
-  lift $ sendKeyboardWithText bot config userOrChatId (repeatText_ repAmount)
+  withErrorPrinting $
+    sendKeyboardWithText bot config userOrChatId (repeatText_ repAmount)
 
-onText bot config userId text messageId repAmount = do
-  isKeyboardResponse <- isKeyboardResponse userId text
+onText ::
+     BotFriendly a u
+  => a
+  -> Config
+  -> Integer
+  -> String
+  -> MesssageId
+  -> RepeatsAmount
+  -> BotState a IO ()
+onText bot config userOrChatId text messageId repAmount = do
+  isKeyboardResponse <- isKeyboardResponse userOrChatId text
   res <-
     if isKeyboardResponse
-      then DB.setRepeatsAmount userId (getIntByChar (head text)) >>
-           return mempty
-      else lift $ forwardMessageNTimes bot config userId messageId repAmount
-  DB.delAwaitingChat userId
+      then DB.setRepeatsAmount userOrChatId (getIntByChar (head text))
+      else withErrorPrinting $
+           forwardMessageNTimes bot config userOrChatId messageId repAmount
+  DB.delAwaitingChat userOrChatId
   return res
   where
-    isKeyboardResponse userId text = do
-      isAwaiting <- DB.isAwaiting userId
+    isKeyboardResponse userOrChatId text = do
+      isAwaiting <- DB.isAwaiting userOrChatId
       return $ isAwaiting && (length text == 1 && isDigit (head text))
     getIntByChar ch = toInteger $ fromEnum ch - fromEnum '0'
 
-handleUpdate ::
-     ( Bot a u
-     , Read offsetType
-     , Read additionalInfoType
-     , Show offsetType
-     , Show additionalInfoType
-     , Update u
-     )
-  => a
-  -> Config
-  -> u
-  -> StateT (DB.Database offsetType additionalInfoType) IO ()
+handleUpdate :: BotFriendly a u => a -> Config -> u -> BotState a IO ()
 handleUpdate bot config update = do
   let maybeText = getMaybeText update
   let userOrChatId = getUserOrChatId update
@@ -59,25 +77,19 @@ handleUpdate bot config update = do
   repAmount <- DB.getRepeatsAmount config userOrChatId
   case maybeText of
     Just "/start" ->
-      lift $ sendMessage bot config userOrChatId (config & helpText)
+      withErrorPrinting $
+      sendMessage bot config userOrChatId (config & helpText)
     Just "/help" ->
-      lift $ sendMessage bot config userOrChatId (config & helpText)
+      withErrorPrinting $
+      sendMessage bot config userOrChatId (config & helpText)
     Just "/repeat" -> onRepeat bot config userOrChatId repAmount
     Just text -> onText bot config userOrChatId text messageId repAmount
     Nothing ->
-      lift $ forwardMessageNTimes bot config userOrChatId messageId repAmount
+      withErrorPrinting $
+      forwardMessageNTimes bot config userOrChatId messageId repAmount
   return ()
 
-loop ::
-     ( Bot a u
-     , Read (OffsetType a)
-     , Read (AdditionalType a)
-     , Show (OffsetType a)
-     , Show (AdditionalType a)
-     )
-  => a
-  -> Config
-  -> BotState a IO b
+loop :: BotFriendly a u => a -> Config -> BotState a IO b
 loop bot config = do
   offset <- gets DB.offset
   isTimeToBackup <- isTimeToBackup
@@ -95,25 +107,14 @@ loop bot config = do
       curTime <- lift getCurrentTime
       return $ (diffUTCTime curTime prevTime) > (config & diffTimeBackupPeriod)
     backUpAndUpdateTimer = do
-      lift $ print "Backing up"
       DB.backup $ (config & backupPath) ++ (backupName bot)
       DB.updateTime
 
-start ::
-     ( Bot a u
-     , Read (OffsetType a)
-     , Read (AdditionalType a)
-     , Show (OffsetType a)
-     , Show (AdditionalType a)
-     )
-  => a
-  -> Configurator.Config
-  -> IO ()
+start :: BotFriendly a u => a -> Configurator.Config -> IO ()
 start bot configHandle = do
   config <- parseConfig configHandle
   db <- DB.getRestoredOrClearDatabase (backupName bot) (defaultOffset bot)
   res <- runStateT (initAndGoLoop config) db
-  --print res
   return ()
   where
     initAndGoLoop config = do
