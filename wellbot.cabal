@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4ea55d39657fed0d78cf2c745fa47860a2fd33ffcb59f43a207a46672651be48
+-- hash: 173bc24cf180aeb1fe06f6af16a5820aeabbf81ef23e2df472fca0ca7e8ab111
 
 name:           wellbot
 version:        0.1.0.0
@@ -27,20 +27,21 @@ source-repository head
 
 library
   exposed-modules:
+      Class.Bot
+      Class.Update
       Config
+      Database.Interact
+      Database.Types
       Lib
       Logger
+      Logic
       Telegram.Api
-      Telegram.Database.Interact
-      Telegram.Database.Types
-      Telegram.Interact
+      Telegram.Instances
       Telegram.Keyboard.Builder
       Telegram.Keyboard.Types
       Telegram.Types
       Vk.Api
-      Vk.Database.Interact
-      Vk.Database.Types
-      Vk.Interact
+      Vk.Instances
       Vk.Keyboard.Builder
       Vk.Keyboard.Types
       Vk.Types

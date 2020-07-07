@@ -14,8 +14,6 @@ import           GHC.Exception              (errorCallException)
 import qualified Network.HTTP.Client        as Conduit
 import           Network.HTTP.Simple        (httpBS)
 import           System.Random              (getStdRandom, randomR)
-import qualified Vk.Database.Interact       as DB
-import qualified Vk.Database.Types          as DB
 import           Vk.Keyboard.Builder
 import           Vk.Types
 
@@ -65,7 +63,9 @@ getServerAndTokenAndOffset config = do
   let tokenPair = ("access_token", config & vkToken)
   let versionPair = ("v", config & vkApiVersion)
   let queryPairs = [groupIdPair, tokenPair, versionPair]
+
   bsResponse <- doGetRequest config server path queryPairs
+  print bsResponse
   let maybeResponse = decode bsResponse :: Maybe (Response Longpoll)
   return maybeResponse
 

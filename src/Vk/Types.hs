@@ -2,8 +2,11 @@
 
 module Vk.Types where
 
+import qualified Class.Update      as Class
 import           Data.Aeson.Casing (aesonPrefix, snakeCase)
 import           Data.Aeson.Types
+import           Data.Function     ((&))
+import           Data.Maybe        (fromJust)
 import           GHC.Generics      (Generic)
 
 newtype Response respType =
@@ -37,6 +40,11 @@ data Update =
 
 instance FromJSON Update where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+instance Class.Update Update where
+  getMaybeText = messageText . fromJust . objecttMessage . updateObject
+  getUserOrChatId = messageFromId . fromJust . objecttMessage . updateObject
+  getMessageId = messageId . fromJust . objecttMessage . updateObject
 
 -------
 data Message =
@@ -72,10 +80,11 @@ instance FromJSON Objectt where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
 -------
-data Error = 
+data Error =
   Error
-  {errorFailed::Integer}
-    deriving (Generic, Show, Eq)
+    { errorFailed :: Integer
+    }
+  deriving (Generic, Show, Eq)
 
 instance FromJSON Error where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase

@@ -24,8 +24,6 @@ import qualified Network.HTTP.Client.Conduit as Conduit
 import qualified Network.HTTP.Conduit        as Conduit
 import           Network.HTTP.Simple         (httpBS)
 import           Config
-import qualified Telegram.Database.Interact  as DB
-import qualified Telegram.Database.Types     as DB
 import           Telegram.Keyboard.Builder
 import           Telegram.Types
 
@@ -110,8 +108,8 @@ forwardMessageNTimes :: Config -> ChatId -> MessageId -> Integer -> IO ()
 forwardMessageNTimes config chatId messageId n =
   replicateM_ (fromInteger n) (forwardMessage config chatId messageId)
 
-sendKyboardWithText :: Config -> ChatId -> String -> IO ()
-sendKyboardWithText config chatId text = do
+sendKeyboardWithText :: Config -> ChatId -> String -> IO ()
+sendKeyboardWithText config chatId text = do
   bsResponse <- doGetRequest config "sendMessage" queryPairs
   let maybeResponse = decode bsResponse :: Maybe (Response Message)
   throwIfError maybeResponse "sendMessage"

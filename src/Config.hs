@@ -20,6 +20,7 @@ data Config =
     , vkToken              :: String
     , vkGroupId            :: Integer
     , vkApiVersion         :: String
+    , backupPath ::String
     }
   deriving (Show)
 
@@ -35,6 +36,7 @@ parseConfig cfg = do
   vkToken <- require cfg "vkToken" :: IO String
   vkGroupId <- require cfg "vkGroupId" :: IO Integer
   vkApiVersion <- require cfg "vkApiVersion" :: IO String
+  backupPath <- require cfg "backupPath" :: IO String
   let backupPeriod = sum $ replicate secPeriod (1 :: NominalDiffTime)
   return
     Config
@@ -49,4 +51,5 @@ parseConfig cfg = do
       , vkToken = vkToken
       , vkGroupId = vkGroupId
       , vkApiVersion = vkApiVersion
+      , backupPath = backupPath
       }

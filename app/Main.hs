@@ -4,15 +4,17 @@
 module Main where
 
 import           Data.Configurator
-import           Telegram.Interact
+--import           Telegram.Interact
 import Control.Exception (SomeException, Exception, try)
 import Data.Configurator.Types (Config)
-import qualified Vk.Interact as VK
-
+--import qualified Vk.Interact as VK
+import Logic
+import Vk.Instances
+import Telegram.Instances
 main = do
- -- x <- catch (readFile "/tmp/foo.txt") handler
+
   eitherCfg <- (try $ load [Required "/home/darick/wellbot/app/bot.cfg"]) -- :: IO (Either SomeException Config)
-  either onExcept VK.start eitherCfg
+  either onExcept (start TgBot) eitherCfg
   --either onExcept Telegram.Interact.start eitherCfg
   return () 
   where
