@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Telegram.Api where
+module Telegram.Api.Interact where
 
+import           Config
 import           Control.Concurrent          (threadDelay)
 import           Control.Exception           (SomeException, throw, toException,
                                               try)
@@ -23,10 +24,8 @@ import           GHC.Exception               (errorCallException)
 import qualified Network.HTTP.Client.Conduit as Conduit
 import qualified Network.HTTP.Conduit        as Conduit
 import           Network.HTTP.Simple         (httpBS)
-import           Config
+import           Telegram.Api.Types
 import           Telegram.Keyboard.Builder
-import           Telegram.Types
-
 
 doGetRequest :: Config -> String -> [(String, String)] -> IO LBS.ByteString
 doGetRequest config method queryPairs = do
@@ -41,7 +40,8 @@ doGetRequest config method queryPairs = do
     setPath reqVal path = reqVal {Conduit.path = path}
     setPathAndQueryString req path query =
       Conduit.setQueryString query (setPath req bsUrlPath)
-    bsQueryPairs = map stringPairToByteStringPair (timeoutQueryPair:queryPairs)
+    bsQueryPairs =
+      map stringPairToByteStringPair (timeoutQueryPair : queryPairs)
     returnResponseBody x = return $ LBS.fromStrict $ Conduit.responseBody x
 
 isResponseOk :: Maybe (Response respType) -> Bool

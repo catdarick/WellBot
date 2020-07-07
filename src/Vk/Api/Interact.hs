@@ -1,4 +1,4 @@
-module Vk.Api where
+module Vk.Api.Interact where
 
 import           Config
 import           Control.Exception          (throw)
@@ -15,7 +15,7 @@ import qualified Network.HTTP.Client        as Conduit
 import           Network.HTTP.Simple        (httpBS)
 import           System.Random              (getStdRandom, randomR)
 import           Vk.Keyboard.Builder
-import           Vk.Types
+import           Vk.Api.Types
 
 --doGetRequest :: Config -> String -> [(String, String)] -> IO LBS.ByteString
 doGetRequest config server method queryPairs = do

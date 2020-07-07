@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Telegram.Types where
+module Telegram.Api.Types where
 
 import           Data.Aeson
 import           Data.Aeson.Casing

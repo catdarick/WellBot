@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Vk.Types where
+module Vk.Api.Types where
 
-import qualified Class.Update      as Class
+
 import           Data.Aeson.Casing (aesonPrefix, snakeCase)
 import           Data.Aeson.Types
 import           Data.Function     ((&))
@@ -41,10 +41,7 @@ data Update =
 instance FromJSON Update where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
-instance Class.Update Update where
-  getMaybeText = messageText . fromJust . objecttMessage . updateObject
-  getUserOrChatId = messageFromId . fromJust . objecttMessage . updateObject
-  getMessageId = messageId . fromJust . objecttMessage . updateObject
+
 
 -------
 data Message =

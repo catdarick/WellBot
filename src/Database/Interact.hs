@@ -2,77 +2,79 @@
 
 module Database.Interact where
 
+import           Class.Bot                 (ReadShow)
 import           Config
+import           Control.Exception         (SomeException, try)
+import           Control.Monad.Trans.Class (MonadTrans (lift))
 import           Control.Monad.Trans.State (StateT, get, gets, modify, put)
+import           Data.Aeson                (FromJSON, decode)
+import qualified Data.ByteString.Lazy      as DataByteString
 import           Data.Function             ((&))
-import           Data.Map                  (Map, delete, lookup)
+import           Data.Map                  (Map, delete, fromList, lookup)
 import           Data.Map.Strict           (insert)
 import           Data.Maybe                (fromMaybe)
-import           Database.Types
-
-import           Control.Exception         (SomeException, try)
-import           Data.Aeson                (FromJSON, decode)
-
-import           Class.Bot                 (ReadShow)
-import           Control.Monad.Trans.Class (MonadTrans (lift))
-import qualified Data.ByteString.Lazy      as DataByteString
-import           Data.Map                  (fromList)
 import           Data.Time                 (UTCTime, getCurrentTime)
+import           Database.Types
 import           Text.Read                 (readMaybe)
 
 type BotState a b = StateT (Database a b)
 
-setOffset :: Monad m => offsetType -> BotState offsetType additionalInfoType m ()
+setOffset ::
+     Monad m => offsetType -> BotState offsetType additionalInfoType m ()
 setOffset newOffset = do
   db <- get
   put (db {offset = newOffset})
 
-
-isAwaiting :: Monad m => Integer -> BotState offsetType additionalInfoType m Bool
+isAwaiting ::
+     Monad m => Integer -> BotState offsetType additionalInfoType m Bool
 isAwaiting chatId = do
   db <- get
   let awChatsVal = db & awaitingChatsID
   return $ chatId `elem` awChatsVal
 
-
-getRepeatsAmount :: Monad m => Config -> Integer -> BotState offsetType additionalInfoType m Integer
+getRepeatsAmount ::
+     Monad m
+  => Config
+  -> Integer
+  -> BotState offsetType additionalInfoType m Integer
 getRepeatsAmount config userOrChatId = do
   chats <- gets chats
   let defaultRepeatsAmount = config & defaultRepeatAmount
   let res = Data.Map.lookup userOrChatId chats
   return $ fromMaybe defaultRepeatsAmount res
 
-delAwaitingChat :: Monad m => Integer -> BotState offsetType additionalInfoType m ()
+delAwaitingChat ::
+     Monad m => Integer -> BotState offsetType additionalInfoType m ()
 delAwaitingChat chatId = do
   db <- get
   let awChatsVal = db & awaitingChatsID
-  let newChatsVal = filter (chatId/=) awChatsVal--[x | x <- awChatsVal, x /= chatId]
+  let newChatsVal = filter (chatId /=) awChatsVal
   put (db {awaitingChatsID = newChatsVal})
-  
 
-addAwaitingChat :: Monad m => Integer -> BotState offsetType additionalInfoType m ()
+addAwaitingChat ::
+     Monad m => Integer -> BotState offsetType additionalInfoType m ()
 addAwaitingChat chatId =
   modify
     (\db@Database {awaitingChatsID = xs} -> db {awaitingChatsID = chatId : xs})
 
-
-addChat :: Monad m => ChatId -> RepeatsAmount -> BotState offsetType additionalInfoType m ()
+addChat ::
+     Monad m
+  => ChatId
+  -> RepeatsAmount
+  -> BotState offsetType additionalInfoType m ()
 addChat chatId repAmount = do
   chatsOld <- gets chats
   setNewChats $ insert chatId repAmount chatsOld
-
 
 setNewChats :: Monad m => Chats -> BotState offsetType additionalInfoType m ()
 setNewChats newChats = do
   db <- get
   put (db {chats = newChats})
 
-
 delChat :: Monad m => ChatId -> BotState offsetType additionalInfoType m ()
 delChat chatId = do
   chatsOld <- gets chats
   setNewChats $ delete chatId chatsOld
-
 
 setRepeatsAmount ::
      Monad m
