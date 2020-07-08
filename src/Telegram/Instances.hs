@@ -25,9 +25,9 @@ instance Class.Update Api.Update where
   getUserOrChatId = Api.chatId . Api.messageChat . fromJust . Api.updateMessage
   getMessageId = Api.messageMessageId . fromJust . Api.updateMessage
 
-instance Class.Bot TgBot Api.Update where
+instance Class.Bot TgBot where
   type OffsetType TgBot = Integer
-  type AdditionalType TgBot = Bool
+  type UpdateType TgBot = Api.Update
   backupName = const "backupTG.dat"
   defaultOffset = const 0
   sendMessage a = Api.sendMessage

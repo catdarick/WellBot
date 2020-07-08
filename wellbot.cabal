@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4ea6f623e70d0133b6be18982a28404469f287f612e976ae49bbdd702cd8156b
+-- hash: a02dfd451e352cd38970573d11edf95ef6f9ece15ceb7e26b260f7e4fe21851f
 
 name:           wellbot
 version:        0.1.0.0
@@ -98,10 +98,8 @@ test-suite wellbot-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Telegram.TestHelpers
-      Telegram.UpdateHandlerTest
-      Vk.TestHelpers
-      Vk.UpdateHandlerTest
+      Logic.Helpers
+      Logic.Test
       Paths_wellbot
   hs-source-dirs:
       test

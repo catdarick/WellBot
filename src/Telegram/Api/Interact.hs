@@ -100,10 +100,6 @@ forwardMessage config chatId messageId = do
     fromChatIdParam = ("from_chat_id", show chatId)
     queryPairs = [chatIdParam, messageIdParam, fromChatIdParam]
 
-forwardMessageNTimes :: Config -> ChatId -> MessageId -> Integer -> IO ()
-forwardMessageNTimes config chatId messageId n =
-  replicateM_ (fromInteger n) (forwardMessage config chatId messageId)
-
 sendKeyboardWithText :: Config -> ChatId -> String -> IO ()
 sendKeyboardWithText config chatId text = do
   bsResponse <- doGetRequest config "sendMessage" queryPairs

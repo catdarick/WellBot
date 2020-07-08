@@ -9,15 +9,7 @@ import           GHC.Generics      (Generic)
 import Data.Maybe (fromJust)
 type ChatId = Integer
 type MessageId = Integer
--------
-newtype User =
-  User
-    { userId :: Integer
-    }
-  deriving (Generic, Show)
 
-instance FromJSON User where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
 -------
 newtype Chat =
@@ -33,7 +25,6 @@ instance FromJSON Chat where
 data Message =
   Message
     { messageMessageId :: Integer
-    , messageFrom      :: User
     , messageText      :: Maybe String
     , messageChat      :: Chat
     }

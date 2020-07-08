@@ -20,4 +20,4 @@ data Database offsetType additionalInfoType =
     , prevTime        :: UTCTime
     , additionalInfo  :: Maybe additionalInfoType
     }
-  deriving (Read, Show)
+  deriving (Read, Show, Eq)

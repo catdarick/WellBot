@@ -4,8 +4,9 @@
 
 module Vk.Instances where
 
-import           Class.Bot as Class
-import qualified Class.Update      as Class
+import           Class.Bot                 as Class
+import qualified Class.Update              as Class
+import           Config
 import           Control.Exception         (SomeException, try)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
 import           Control.Monad.Trans.State (StateT, gets, modify)
@@ -14,16 +15,19 @@ import           Data.Maybe                (fromJust, isJust)
 import qualified Database.Interact         as DB
 import qualified Database.Types            as DB
 import           ErrorHandler
-import qualified Vk.Api.Interact                    as Api
-import qualified Vk.Api.Types                  as Api
-import Config
+import qualified Vk.Api.Interact           as Api
+import qualified Vk.Api.Types              as Api
+
 data VkBot =
   VkBot
 
 instance Class.Update Api.Update where
-  getMaybeText = Api.messageText . fromJust . Api.objecttMessage . Api.updateObject
-  getUserOrChatId = Api.messageFromId . fromJust . Api.objecttMessage . Api.updateObject
-  getMessageId = Api.messageId . fromJust . Api.objecttMessage . Api.updateObject
+  getMaybeText =
+    Api.messageText . fromJust . Api.objecttMessage . Api.updateObject
+  getUserOrChatId =
+    Api.messageFromId . fromJust . Api.objecttMessage . Api.updateObject
+  getMessageId =
+    Api.messageId . fromJust . Api.objecttMessage . Api.updateObject
 
 data Additional =
   Additional
@@ -32,9 +36,10 @@ data Additional =
     }
   deriving (Show, Read)
 
-instance Class.Bot VkBot Api.Update where
+instance Class.Bot VkBot where
   type OffsetType VkBot = String
   type AdditionalType VkBot = Additional
+  type UpdateType VkBot = Api.Update
   backupName = const "backupVK.dat"
   defaultOffset = const "0"
   sendMessage a = Api.sendMessage
@@ -57,7 +62,8 @@ instance Class.Bot VkBot Api.Update where
     where
       isJustMessage = isJust . Api.objecttMessage . Api.updateObject
 
-updateServerAndTokenAndOffset :: Config -> StateT (DB.Database String Additional) IO ()
+updateServerAndTokenAndOffset ::
+     Config -> StateT (DB.Database String Additional) IO ()
 updateServerAndTokenAndOffset config = do
   eitherMaybeResponse <- lift $ try $ Api.getServerAndTokenAndOffset config
   case eitherMaybeResponse of
