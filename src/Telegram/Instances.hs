@@ -28,15 +28,15 @@ instance Class.Update Api.Update where
 instance Class.Bot TgBot where
   type OffsetType TgBot = Integer
   type UpdateType TgBot = Api.Update
-  backupName = const "backupTG.dat"
+  name = const "TG"
   defaultOffset = const 0
   sendMessage a = Api.sendMessage
   forwardMessage a = Api.forwardMessage
   sendKeyboardWithText a = Api.sendKeyboardWithText
   initBot a = const $ return ()
   getUpdatesAndOffset a config = do
-    offset <- gets DB.offset
-    updates <- withErrorPrinting $ Api.getUpdates config offset
+    offset <- DB.getOffset
+    updates <- withErrorLogging$ Api.getUpdates config offset
     let filtredUpdates = filter isJustMessage updates
     let newOffset = getOffset offset updates
     return (filtredUpdates, newOffset)

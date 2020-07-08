@@ -7,29 +7,24 @@
 
 module Class.Bot where
 
+import           Bot.Types
 import           Class.Update
 import           Config
 import           Control.Monad             (replicateM, replicateM_, void)
 import           Control.Monad.Trans.State (StateT)
 import           Database.Types
 
-type UserOrChatId = Integer
-
-type MesssageId = Integer
-
-type RepeatsAmount = Integer
-
 type ReadShow a b = (Read a, Show a, Read b, Show b)
 
 type BotFriendly a = (Bot a, ReadShow (OffsetType a) (AdditionalType a))
 
-type BotState a  = StateT (Database (OffsetType a) (AdditionalType a)) 
+type BotStateT a = (StateT (BotState_ (OffsetType a) (AdditionalType a) a)) 
 
 class ( Update (UpdateType a)
       , Monoid (ReturningType a)
       , ReadShow (OffsetType a) (AdditionalType a)
       ) =>
-      Bot a 
+      Bot a
   where
   type OffsetType a
   type UpdateType a
@@ -37,7 +32,7 @@ class ( Update (UpdateType a)
   type AdditionalType a = ()
   type ReturningType a
   type ReturningType a = ()
-  backupName :: a -> String
+  name :: a -> String
   defaultOffset :: a -> OffsetType a
   sendMessage :: a -> Config -> UserOrChatId -> String -> IO (ReturningType a)
   forwardMessage ::
@@ -45,8 +40,8 @@ class ( Update (UpdateType a)
   sendKeyboardWithText ::
        a -> Config -> UserOrChatId -> String -> IO (ReturningType a)
   getUpdatesAndOffset ::
-       a -> Config -> BotState a IO ([UpdateType a], OffsetType a)
-  initBot :: a -> Config -> BotState a IO ()
+       a -> Config -> BotStateT a IO ([UpdateType a], OffsetType a)
+  initBot :: a -> Config -> BotStateT a IO ()
   initBot _ _ = return ()
   forwardMessageNTimes ::
        a

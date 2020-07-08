@@ -1,5 +1,5 @@
 .vscode
 .history
 .stack-work
-backupVK.dat
-backupTG.dat
+*.backup
+*.log

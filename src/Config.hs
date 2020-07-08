@@ -6,6 +6,7 @@ import           Data.Configurator (require)
 import           Data.Fixed        (Pico)
 import           Data.Time         (DiffTime, NominalDiffTime, UTCTime,
                                     secondsToDiffTime)
+import qualified Logger.Types      as Log
 
 data Config =
   Config
@@ -20,7 +21,9 @@ data Config =
     , vkToken              :: String
     , vkGroupId            :: Integer
     , vkApiVersion         :: String
-    , backupPath ::String
+    , backupPath           :: String
+    , logPath              :: String
+    , logSinceLevel        :: Log.Level
     }
   deriving (Show)
 
@@ -37,6 +40,8 @@ parseConfig cfg = do
   vkGroupId <- require cfg "vkGroupId" :: IO Integer
   vkApiVersion <- require cfg "vkApiVersion" :: IO String
   backupPath <- require cfg "backupPath" :: IO String
+  logPath <- require cfg "logPath" :: IO String
+  logSinceLevel <- require cfg "logSinceLevel" :: IO Log.Level
   let backupPeriod = sum $ replicate secPeriod (1 :: NominalDiffTime)
   return
     Config
@@ -52,4 +57,6 @@ parseConfig cfg = do
       , vkGroupId = vkGroupId
       , vkApiVersion = vkApiVersion
       , backupPath = backupPath
+      , logPath = logPath
+      , logSinceLevel = logSinceLevel
       }

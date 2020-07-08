@@ -12,7 +12,7 @@ import Telegram.Instances
 main = do
   eitherCfg <- (try $ load [Required "/home/darick/wellbot/app/bot.cfg"]) -- :: IO (Either SomeException Config)
   case eitherCfg of
-    Left (e::SomeException) -> print "Can't find config file"
+    Left (e::SomeException) -> print "Can't find config file" >> print e
     Right handleConfig -> do
       config <- parseConfig handleConfig
       start TgBot config

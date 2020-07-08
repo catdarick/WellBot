@@ -1,8 +1,10 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Database.Interact where
 
-import           Class.Bot                 (ReadShow)
+import           Bot.Types                 (BotState_, config, database, bot)
+import           Class.Bot                 (name, Bot, ReadShow)
 import           Config
 import           Control.Exception         (SomeException, try)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
@@ -17,85 +19,84 @@ import           Data.Time                 (UTCTime, getCurrentTime)
 import           Database.Types
 import           Text.Read                 (readMaybe)
 
-type BotState a b = StateT (Database a b)
+type BotState a b t= StateT (BotState_ a b t)
 
-setOffset ::
-     Monad m => offsetType -> BotState offsetType additionalInfoType m ()
+setDb :: Monad m => Database a b -> (BotState a b t )m ()
+setDb db = do
+  state <- get
+  put $ state {database = db}
+
+setOffset :: Monad m => offsetType -> (BotState offsetType b t) m ()
 setOffset newOffset = do
-  db <- get
-  put (db {offset = newOffset})
+  db <- gets database
+  setDb $ db {offset = newOffset}
 
-isAwaiting ::
-     Monad m => Integer -> BotState offsetType additionalInfoType m Bool
+getOffset :: Monad m => (BotState a b t) m a
+getOffset = gets $ offset . database
+
+getPrevTime :: Monad m => (BotState a b t) m UTCTime
+getPrevTime = gets $ prevTime . database
+
+isAwaiting :: Monad m => Integer -> (BotState a b t) m Bool
 isAwaiting chatId = do
-  db <- get
+  db <- gets database
   let awChatsVal = db & awaitingChatsID
   return $ chatId `elem` awChatsVal
 
-getRepeatsAmount ::
-     Monad m
-  => Config
-  -> Integer
-  -> BotState offsetType additionalInfoType m Integer
+getRepeatsAmount :: Monad m => Config -> Integer -> (BotState a b t) m Integer
 getRepeatsAmount config userOrChatId = do
-  chats <- gets chats
+  chats <- gets $chats . database
   let defaultRepeatsAmount = config & defaultRepeatAmount
   let res = Data.Map.lookup userOrChatId chats
   return $ fromMaybe defaultRepeatsAmount res
 
-delAwaitingChat ::
-     Monad m => Integer -> BotState offsetType additionalInfoType m ()
+delAwaitingChat :: Monad m => Integer -> (BotState a b t) m ()
 delAwaitingChat chatId = do
-  db <- get
+  db <- gets database
   let awChatsVal = db & awaitingChatsID
   let newChatsVal = filter (chatId /=) awChatsVal
-  put (db {awaitingChatsID = newChatsVal})
+  setDb (db {awaitingChatsID = newChatsVal})
 
-addAwaitingChat ::
-     Monad m => Integer -> BotState offsetType additionalInfoType m ()
-addAwaitingChat chatId =
-  modify
-    (\db@Database {awaitingChatsID = xs} -> db {awaitingChatsID = chatId : xs})
+addAwaitingChat :: Monad m => Integer -> (BotState a b t) m ()
+addAwaitingChat chatId = do
+  db <- gets database
+  let awaitingChats = db & awaitingChatsID
+  setDb db {awaitingChatsID = chatId : awaitingChats}
 
-addChat ::
-     Monad m
-  => ChatId
-  -> RepeatsAmount
-  -> BotState offsetType additionalInfoType m ()
+addChat :: Monad m => ChatId -> RepeatsAmount -> (BotState a b t) m ()
 addChat chatId repAmount = do
-  chatsOld <- gets chats
+  chatsOld <- gets $ chats . database
   setNewChats $ insert chatId repAmount chatsOld
 
-setNewChats :: Monad m => Chats -> BotState offsetType additionalInfoType m ()
+setNewChats :: Monad m => Chats -> (BotState a b t) m ()
 setNewChats newChats = do
-  db <- get
-  put (db {chats = newChats})
+  db <- gets database
+  setDb (db {chats = newChats})
 
-delChat :: Monad m => ChatId -> BotState offsetType additionalInfoType m ()
+delChat :: Monad m => ChatId -> (BotState a b t) m ()
 delChat chatId = do
-  chatsOld <- gets chats
+  chatsOld <- gets $ chats . database
   setNewChats $ delete chatId chatsOld
 
-setRepeatsAmount ::
-     Monad m
-  => ChatId
-  -> RepeatsAmount
-  -> BotState offsetType additionalInfoType m ()
+setRepeatsAmount :: Monad m => ChatId -> RepeatsAmount -> (BotState a b t) m ()
 setRepeatsAmount chatId repAmount = do
   delChat chatId
   addChat chatId repAmount
 
-updateTime :: StateT (Database a b) IO ()
+updateTime :: (BotState a b t) IO ()
 updateTime = do
-  db <- get
+  db <- gets database
   newTime <- lift getCurrentTime
-  put (db {prevTime = newTime})
+  setDb (db {prevTime = newTime})
 
-backup :: Show a => FilePath -> StateT a IO ()
-backup path = do
-  db <- get
+backup :: (Show a, Show b, Bot t) => (BotState a b t) IO ()
+backup = do
+  path <- gets $backupPath . config
+  name <- gets $ name . bot
+  let fullPath = path ++ name ++ ".backup"
+  db <- gets database
   let strDB = show db
-  lift $ writeFile path strDB
+  lift $ writeFile fullPath strDB
 
 getRestoredOrClearDatabase ::
      ReadShow offsetType additionalInfoType

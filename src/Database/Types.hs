@@ -1,10 +1,10 @@
 module Database.Types where
 
-import           Data.Aeson.Types (FromJSON, ToJSON)
-import           Data.Map         (Map)
-import           Data.Time        (UTCTime)
-import           GHC.Generics     (Generic)
-import Control.Monad.Trans.State (StateT)
+import           Control.Monad.Trans.State (StateT)
+import           Data.Aeson.Types          (FromJSON, ToJSON)
+import           Data.Map                  (Map)
+import           Data.Time                 (UTCTime)
+import           GHC.Generics              (Generic)
 
 type ChatId = Integer
 

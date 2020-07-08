@@ -4,6 +4,7 @@
 
 module Vk.Instances where
 
+import           Bot.Types
 import           Class.Bot                 as Class
 import qualified Class.Update              as Class
 import           Config
@@ -17,9 +18,8 @@ import qualified Database.Types            as DB
 import           ErrorHandler
 import qualified Vk.Api.Interact           as Api
 import qualified Vk.Api.Types              as Api
+import Vk.Types
 
-data VkBot =
-  VkBot
 
 instance Class.Update Api.Update where
   getMaybeText =
@@ -29,29 +29,25 @@ instance Class.Update Api.Update where
   getMessageId =
     Api.messageId . fromJust . Api.objecttMessage . Api.updateObject
 
-data Additional =
-  Additional
-    { server        :: String
-    , longpollToken :: String
-    }
-  deriving (Show, Read)
+
 
 instance Class.Bot VkBot where
   type OffsetType VkBot = String
   type AdditionalType VkBot = Additional
   type UpdateType VkBot = Api.Update
-  backupName = const "backupVK.dat"
+  name = const "VK"
   defaultOffset = const "0"
   sendMessage a = Api.sendMessage
   forwardMessage a = Api.forwardMessage
   sendKeyboardWithText a = Api.sendKeyboardWithText
   initBot a = updateServerAndTokenAndOffset
   getUpdatesAndOffset a config = do
-    server <- gets $ server . fromJust . DB.additionalInfo
-    token <- gets $ longpollToken . fromJust . DB.additionalInfo
-    offset <- gets DB.offset
+    additionalInfo <- gets $ fromJust . DB.additionalInfo . database
+    let server_ = additionalInfo & server
+    let token_ = additionalInfo & longpollToken
+    offset <- DB.getOffset
     maybeUpdatesAndOffset <-
-      withErrorPrinting $ Api.getUpdatesAndOffset config server offset token
+      withErrorLogging $ Api.getUpdatesAndOffset config server_ offset token_
     case maybeUpdatesAndOffset of
       Just updatesAndOffset -> do
         let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
@@ -62,8 +58,6 @@ instance Class.Bot VkBot where
     where
       isJustMessage = isJust . Api.objecttMessage . Api.updateObject
 
-updateServerAndTokenAndOffset ::
-     Config -> StateT (DB.Database String Additional) IO ()
 updateServerAndTokenAndOffset config = do
   eitherMaybeResponse <- lift $ try $ Api.getServerAndTokenAndOffset config
   case eitherMaybeResponse of
@@ -78,10 +72,10 @@ updateServerAndTokenAndOffset config = do
           DB.setOffset offset
         Nothing -> lift $ print "Cannot get server and token for LongPolling"
   where
-    setServerAndToken server token =
-      modify
-        (\db ->
-           db
-             { DB.additionalInfo =
-                 Just Additional {server = server, longpollToken = token}
-             })
+    setServerAndToken server token = do
+      db <- gets database
+      DB.setDb
+        db
+          { DB.additionalInfo =
+              Just Additional {server = server, longpollToken = token}
+          }
