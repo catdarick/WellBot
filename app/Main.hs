@@ -14,10 +14,9 @@ import           Telegram.Instances
 import           Vk.Instances
 import           Vk.Types
 
-
 main :: IO ()
 main = do
-  eitherCfg <- try $ load [Required "/home/darick/wellbot/app/bot.cfg"]
+  eitherCfg <- try $ load [Required "$(PWD)/app/bot.cfg"]
   case eitherCfg of
     Left (e :: SomeException) -> print "Can't find config file" >> print e
     Right handleConfig -> do
