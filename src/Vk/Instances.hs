@@ -4,22 +4,21 @@
 
 module Vk.Instances where
 
-import           Bot.Types
-import           Class.Bot                 as Class
-import qualified Class.Update              as Class
+import qualified Bot.Classes                 as Class
+import qualified Bot.State.Database.Interact as DB
+import qualified Bot.State.Database.Types    as DB
+import qualified Bot.State.Interact          as State
+import           Bot.State.Types
 import           Config
-import           Control.Exception         (SomeException, try)
-import           Control.Monad.Trans.Class (MonadTrans (lift))
-import           Control.Monad.Trans.State (StateT, gets, modify)
-import           Data.Function             ((&))
-import           Data.Maybe                (fromJust, isJust)
-import qualified Database.Interact         as DB
-import qualified Database.Types            as DB
-import           ErrorHandler
-import qualified Vk.Api.Interact           as Api
-import qualified Vk.Api.Types              as Api
-import Vk.Types
-
+import           Control.Exception           (SomeException, catch, try)
+import           Control.Monad.Trans.Class   (MonadTrans (lift))
+import           Control.Monad.Trans.State   (StateT, gets, modify)
+import           Data.Function               ((&))
+import           Data.Maybe                  (fromJust, isJust)
+import qualified Logger.Interact             as Log
+import qualified Vk.Api.Interact             as Api
+import qualified Vk.Api.Types                as Api
+import           Vk.Types
 
 instance Class.Update Api.Update where
   getMaybeText =
@@ -28,8 +27,6 @@ instance Class.Update Api.Update where
     Api.messageFromId . fromJust . Api.objecttMessage . Api.updateObject
   getMessageId =
     Api.messageId . fromJust . Api.objecttMessage . Api.updateObject
-
-
 
 instance Class.Bot VkBot where
   type OffsetType VkBot = String
@@ -40,20 +37,26 @@ instance Class.Bot VkBot where
   sendMessage a = Api.sendMessage
   forwardMessage a = Api.forwardMessage
   sendKeyboardWithText a = Api.sendKeyboardWithText
-  initBot a = updateServerAndTokenAndOffset
-  getUpdatesAndOffset a config = do
+  initBot = do
+    (bot, config) <- State.getBotAndConfig
+    updateServerAndTokenAndOffset config
+  getUpdatesAndOffset = do
+    (bot, config) <- State.getBotAndConfig
     additionalInfo <- gets $ fromJust . DB.additionalInfo . database
     let server_ = additionalInfo & server
     let token_ = additionalInfo & longpollToken
     offset <- DB.getOffset
     maybeUpdatesAndOffset <-
-      withErrorLogging $ Api.getUpdatesAndOffset config server_ offset token_
+      Log.withErrorLogging $
+      Api.getUpdatesAndOffset config server_ offset token_
     case maybeUpdatesAndOffset of
       Just updatesAndOffset -> do
         let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
         return (filtredUpdates, snd updatesAndOffset)
       Nothing -> do
-        updateServerAndTokenAndOffset config
+        Log.info "Need to update server/accessToken/offset"
+        Log.withDebugLogging "updateServerAndTokenAndOffset" $
+          updateServerAndTokenAndOffset config
         return ([], offset)
     where
       isJustMessage = isJust . Api.objecttMessage . Api.updateObject
@@ -61,7 +64,7 @@ instance Class.Bot VkBot where
 updateServerAndTokenAndOffset config = do
   eitherMaybeResponse <- lift $ try $ Api.getServerAndTokenAndOffset config
   case eitherMaybeResponse of
-    Left (e :: SomeException) -> lift $ print e
+    Left (e :: SomeException) -> Log.warn $ show e
     Right maybeResponse ->
       case maybeResponse of
         Just response -> do
@@ -70,7 +73,7 @@ updateServerAndTokenAndOffset config = do
           let offset = response & Api.responseResponse & Api.longpollTs
           setServerAndToken server token
           DB.setOffset offset
-        Nothing -> lift $ print "Cannot get server and token for LongPolling"
+        Nothing -> Log.warn "Cannot get server and token for LongPolling"
   where
     setServerAndToken server token = do
       db <- gets database

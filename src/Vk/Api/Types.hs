@@ -2,12 +2,15 @@
 
 module Vk.Api.Types where
 
-
 import           Data.Aeson.Casing (aesonPrefix, snakeCase)
 import           Data.Aeson.Types
 import           Data.Function     ((&))
 import           Data.Maybe        (fromJust)
 import           GHC.Generics      (Generic)
+
+type UserId = Integer
+
+type MessageId = Integer
 
 newtype Response respType =
   Response
@@ -41,13 +44,11 @@ data Update =
 instance FromJSON Update where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
-
-
 -------
 data Message =
   Message
-    { messageFromId :: Integer
-    , messageId     :: Integer
+    { messageFromId :: UserId
+    , messageId     :: MessageId
     , messageText   :: Maybe String
     }
   deriving (Generic, Show, Eq)

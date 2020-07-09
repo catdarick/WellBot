@@ -1,10 +1,10 @@
 module Vk.Keyboard.Builder where
 
-import Vk.Keyboard.Types
-import Config
-import Data.Function ((&))
-import Data.Aeson (encode)
-import Data.ByteString.Lazy.Char8 (unpack)
+import           Config
+import           Data.Aeson                 (encode)
+import           Data.ByteString.Lazy.Char8 (unpack)
+import           Data.Function              ((&))
+import           Vk.Keyboard.Types
 
 getKeyboardJSON :: Config -> String
 getKeyboardJSON config = do
@@ -17,5 +17,7 @@ getKeyboardJSON config = do
       , keyboardInline = False
       }
   where
-    intToKey x = Button {buttonAction = intToAction x, buttonColor = "secondary"}
-    intToAction x = Action {actionType = "text", actionLabel = show x, actionPayload = show x} 
+    intToKey x =
+      Button {buttonAction = intToAction x, buttonColor = "secondary"}
+    intToAction x =
+      Action {actionType = "text", actionLabel = show x, actionPayload = show x}

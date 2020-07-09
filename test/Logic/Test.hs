@@ -1,11 +1,11 @@
 module Logic.Test where
 
-import           Class.Bot
+import           Bot.Classes
 import           Config
 import           Control.Monad.Trans.State (StateT (runStateT))
 import           Data.ByteString.Internal  (inlinePerformIO)
 import           Data.Function             ((&))
-import           Logic
+import           Bot.Logic
 import           Logic.Helpers
 import           Test.HUnit
 
@@ -17,7 +17,7 @@ tests =
     , TestLabel "test: got message (not memorized user)" testForwardDefault
     , TestLabel "test: got message (already memorized user)" testForwardWithAlreadySet
     , TestLabel "test: got /help" testHelp
-    , TestLabel "test: got message without text" testNothing
+    , TestLabel "test: got message without text" testEcho
     ]
 
 testRepeat :: Test
@@ -25,18 +25,18 @@ testRepeat = TestCase (assertEqual "testRepeat failed" expectedRes res)
   where
     res =
       inlinePerformIO $
-      runStateT (handleUpdate TestBot config initUpdate) initDb
-    initDb = getDb defOffset False False
+      runStateT (handleUpdate initUpdate) initState
+    initState = getStateWithDb $ getDb defOffset False False
     initUpdate = getUpdateWithTextAndOffset (Just "/repeat")
-    expectedDb = getDb defOffset True False
+    expectedState = getStateWithDb $ getDb defOffset True False
     expectedAction =
       inlinePerformIO $
       sendKeyboardWithText
         TestBot
-        config
+        defConfig
         defChatOrUserId
-        ((config & repeatText) ++ show (config & defaultRepeatAmount))
-    expectedRes = (expectedAction, expectedDb)
+        ((defConfig & repeatText) ++ show (defConfig & defaultRepeatAmount))
+    expectedRes = (expectedAction, expectedState)
 
 testKeyboardResponse :: Test
 testKeyboardResponse =
@@ -44,12 +44,12 @@ testKeyboardResponse =
   where
     res =
       inlinePerformIO $
-      runStateT (handleUpdate TestBot config initUpdate) initDb
-    initDb = getDb defOffset True False
+      runStateT (handleUpdate initUpdate) initState
+    initState = getStateWithDb $ getDb defOffset True False
     initUpdate = getUpdateWithTextAndOffset (Just "3")
-    expectedDb = getDb defOffset False True
+    expectedState = getStateWithDb $ getDb defOffset False True
     expectedAction = ""
-    expectedRes = (expectedAction, expectedDb)
+    expectedRes = (expectedAction, expectedState)
 
 testForwardDefault :: Test
 testForwardDefault =
@@ -57,19 +57,19 @@ testForwardDefault =
   where
     res =
       inlinePerformIO $
-      runStateT (handleUpdate TestBot config initUpdate) initDb
-    initDb = getDb defOffset False False
+      runStateT (handleUpdate initUpdate) initState
+    initState = getStateWithDb $ getDb defOffset False False
     initUpdate = getUpdateWithTextAndOffset (Just "smth")
-    expectedDb = getDb defOffset False False
+    expectedState = getStateWithDb $ getDb defOffset False False
     expectedAction =
       inlinePerformIO $
       forwardMessageNTimes
         TestBot
-        config
+        defConfig
         defChatOrUserId
         defMessageId
-        (config & defaultRepeatAmount)
-    expectedRes = (expectedAction, expectedDb)
+        (defConfig & defaultRepeatAmount)
+    expectedRes = (expectedAction, expectedState)
 
 testForwardWithAlreadySet :: Test
 testForwardWithAlreadySet =
@@ -77,49 +77,49 @@ testForwardWithAlreadySet =
   where
     res =
       inlinePerformIO $
-      runStateT (handleUpdate TestBot config initUpdate) initDb
-    initDb = getDb defOffset False True
+      runStateT (handleUpdate initUpdate) initState
+    initState = getStateWithDb $ getDb defOffset False True
     initUpdate = getUpdateWithTextAndOffset (Just "smth")
-    expectedDb = getDb defOffset False True
+    expectedState = getStateWithDb $ getDb defOffset False True
     expectedAction =
       inlinePerformIO $
       forwardMessageNTimes
         TestBot
-        config
+        defConfig
         defChatOrUserId
         defMessageId
         defSettedRepAmount
-    expectedRes = (expectedAction, expectedDb)
+    expectedRes = (expectedAction, expectedState)
 
 testHelp :: Test
 testHelp = TestCase (assertEqual "testHelp failed" expectedRes res)
   where
     res =
       inlinePerformIO $
-      runStateT (handleUpdate TestBot config initUpdate) initDb
-    initDb = getDb defOffset False True
+      runStateT (handleUpdate initUpdate) initState
+    initState = getStateWithDb $ getDb defOffset False True
     initUpdate = getUpdateWithTextAndOffset (Just "/help")
-    expectedDb = getDb defOffset False True
+    expectedState = getStateWithDb $ getDb defOffset False True
     expectedAction =
       inlinePerformIO $
-      sendMessage TestBot config defChatOrUserId (config & helpText)
-    expectedRes = (expectedAction, expectedDb)
+      sendMessage TestBot defConfig defChatOrUserId (defConfig & helpText)
+    expectedRes = (expectedAction, expectedState)
 
-testNothing :: Test
-testNothing = TestCase (assertEqual "testNothing failed" expectedRes res)
+testEcho :: Test
+testEcho = TestCase (assertEqual "testEcho failed" expectedRes res)
   where
     res =
       inlinePerformIO $
-      runStateT (handleUpdate TestBot config initUpdate) initDb
-    initDb = getDb defOffset False False
+      runStateT (handleUpdate initUpdate) initState
+    initState = getStateWithDb $ getDb defOffset False False
     initUpdate = getUpdateWithTextAndOffset Nothing
-    expectedDb = getDb defOffset False False
+    expectedState = getStateWithDb $ getDb defOffset False False
     expectedAction =
       inlinePerformIO $
        forwardMessageNTimes
         TestBot
-        config
+        defConfig
         defChatOrUserId
         defMessageId
-        (config & defaultRepeatAmount)
-    expectedRes = (expectedAction, expectedDb)
+        (defConfig & defaultRepeatAmount)
+    expectedRes = (expectedAction, expectedState)

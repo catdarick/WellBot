@@ -14,14 +14,13 @@ import           GHC.Exception              (errorCallException)
 import qualified Network.HTTP.Client        as Conduit
 import           Network.HTTP.Simple        (httpBS)
 import           System.Random              (getStdRandom, randomR)
-import           Vk.Keyboard.Builder
 import           Vk.Api.Types
+import           Vk.Keyboard.Builder
 
---doGetRequest :: Config -> String -> [(String, String)] -> IO LBS.ByteString
+doGetRequest :: p -> String -> [Char] -> [(String, String)] -> IO LBS.ByteString
 doGetRequest config server method queryPairs = do
   initReq <- Conduit.parseRequest server
   let req = setPathAndQueryString initReq bsUrlPath bsQueryPairs
- -- lift $ print req
   bsResponse <- httpBS req
   returnResponseBody bsResponse
   where
@@ -34,8 +33,8 @@ doGetRequest config server method queryPairs = do
     bsQueryPairs = map stringPairToByteStringPair queryPairs
     returnResponseBody x = return $ LBS.fromStrict $ Conduit.responseBody x
 
---getUpdates :: (Show a) => Config -> a -> StateT DB.DB IO LBS.ByteString
---k = ZJust (Updates {updatesTs = "10", updatesUpdates = [Update {updateType = "message_new", updateObject = fromList [("client_info",Object (fromList [("lang_id",Number 0.0),("button_actions",Array [String "text",String "vkpay",String "open_app",String "location",String "open_link"]),("keyboard",Bool True),("inline_keyboard",Bool True)])),("message",Object (fromList [("attachments",Array []),("text",String "dfv"),("peer_id",Number 3.0651165e7),("conversation_message_id",Number 9.0),("random_id",Number 0.0),("date",Number 1.593206986e9),("from_id",Number 3.0651165e7),("is_hidden",Bool False),("fwd_messages",Array []),("id",Number 9.0),("important",Bool False),("out",Number 0.0)]))]}]})
+getUpdatesAndOffset ::
+     Config -> String -> String -> String -> IO (Maybe ([Update], String))
 getUpdatesAndOffset config server offset token = do
   let tokenPair = ("key", token)
   let timeoutPair = ("wait", show $ config & secTimeout)
@@ -43,7 +42,6 @@ getUpdatesAndOffset config server offset token = do
   let queryPairs = [actionPair, tokenPair, offsetPair, timeoutPair, versionPair]
   bsResponse <- doGetRequest config server "" queryPairs
   let maybeUpdates = decode bsResponse :: Maybe Updates
-  print bsResponse
   case maybeUpdates of
     Just updates ->
       return $ Just (updates & updatesUpdates, updates & updatesTs)
@@ -56,37 +54,38 @@ getUpdatesAndOffset config server offset token = do
     versionPair = ("v", config & vkApiVersion)
     actionPair = ("act", "a_check")
 
+defaultServer :: String
+defaultServer = "https://api.vk.com/"
+
+sendPath :: String
+sendPath = "method/messages.send"
+
+getServerAndTokenAndOffset :: Config -> IO (Maybe (Response Longpoll))
 getServerAndTokenAndOffset config = do
-  let server = "https://api.vk.com/"
   let path = "method/groups.getLongPollServer"
   let groupIdPair = ("group_id", show $ config & vkGroupId)
   let tokenPair = ("access_token", config & vkToken)
   let versionPair = ("v", config & vkApiVersion)
   let queryPairs = [groupIdPair, tokenPair, versionPair]
-
-  bsResponse <- doGetRequest config server path queryPairs
-  print bsResponse
+  bsResponse <- doGetRequest config defaultServer path queryPairs
   let maybeResponse = decode bsResponse :: Maybe (Response Longpoll)
   return maybeResponse
 
-
+sendMessage :: Config -> UserId -> String -> IO ()
 sendMessage config userId text = do
-  randomInt64 <- (getStdRandom (randomR (0, 2 ^ 64 - 1)) :: IO Integer)
-  let server = "https://api.vk.com/"
-  let path = "method/messages.send"
+  randomInt64 <- getRandomInt64
   let randomIdPair = ("random_id", show randomInt64)
   let userIdPair = ("user_id", show userId)
   let textPair = ("message", text)
   let tokenPair = ("access_token", config & vkToken)
   let versionPair = ("v", config & vkApiVersion)
   let queryPairs = [userIdPair, randomIdPair, textPair, tokenPair, versionPair]
-  bsResponse <- doGetRequest config server path queryPairs
+  bsResponse <- doGetRequest config defaultServer sendPath queryPairs
   return ()
 
+forwardMessage :: Config -> UserId -> MessageId -> IO ()
 forwardMessage config userId messageId = do
-  randomInt64 <- (getStdRandom (randomR (0, 2 ^ 64 - 1)) :: IO Integer)
-  let server = "https://api.vk.com/"
-  let path = "method/messages.send"
+  randomInt64 <- getRandomInt64
   let randomIdPair = ("random_id", show randomInt64)
   let userIdPair = ("user_id", show userId)
   let textPair = ("message", "")
@@ -101,17 +100,12 @@ forwardMessage config userId messageId = do
         , tokenPair
         , versionPair
         ]
-  bsResponse <- doGetRequest config server path queryPairs
-    -- print bsResponse
+  bsResponse <- doGetRequest config defaultServer sendPath queryPairs
   return ()
 
-forwardMessageNTimes config chatId messageId n =
-  replicateM_ (fromInteger n) (forwardMessage config chatId messageId)
-
+sendKeyboardWithText :: Config -> UserId -> String -> IO ()
 sendKeyboardWithText config userId text = do
-  randomInt64 <- (getStdRandom (randomR (0, 2 ^ 64 - 1)) :: IO Integer)
-  let server = "https://api.vk.com/"
-  let path = "method/messages.send"
+  randomInt64 <- getRandomInt64
   let randomIdPair = ("random_id", show randomInt64)
   let userIdPair = ("user_id", show userId)
   let textPair = ("message", text)
@@ -126,6 +120,8 @@ sendKeyboardWithText config userId text = do
         , tokenPair
         , versionPair
         ]
-  bsResponse <- doGetRequest config server path queryPairs
-    -- print bsResponse
+  bsResponse <- doGetRequest config defaultServer sendPath queryPairs
   return ()
+
+getRandomInt64 :: IO Integer
+getRandomInt64 = getStdRandom (randomR (0, 2 ^ 64 - 1))

@@ -13,7 +13,6 @@ data Config =
     { tgToken              :: String
     , helpText             :: String
     , repeatText           :: String
-    , sadText              :: String
     , keysAmount           :: Integer
     , defaultRepeatAmount  :: Integer
     , secTimeout           :: Int
@@ -24,8 +23,10 @@ data Config =
     , backupPath           :: String
     , logPath              :: String
     , logSinceLevel        :: Log.Level
+    , vkEnabled            :: Bool
+    , tgEnabled            :: Bool
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 parseConfig cfg = do
   tgToken <- require cfg "tgToken" :: IO String
@@ -33,7 +34,6 @@ parseConfig cfg = do
   repeatText <- require cfg "commandRepeatText" :: IO String
   keysAmount <- require cfg "tgKeysAmount" :: IO Integer
   defaultRepeatAmount <- require cfg "defaultRepeatAmount" :: IO Integer
-  sadText <- require cfg "sadText" :: IO String
   secTimeout <- require cfg "secLongpollingTimeout" :: IO Int
   secPeriod <- require cfg "secDatabaseBackupPeriod" :: IO Int
   vkToken <- require cfg "vkToken" :: IO String
@@ -42,6 +42,8 @@ parseConfig cfg = do
   backupPath <- require cfg "backupPath" :: IO String
   logPath <- require cfg "logPath" :: IO String
   logSinceLevel <- require cfg "logSinceLevel" :: IO Log.Level
+  vkEnabled <- require cfg "vkEnabled" :: IO Bool
+  tgEnabled <- require cfg "tgEnabled" :: IO Bool
   let backupPeriod = sum $ replicate secPeriod (1 :: NominalDiffTime)
   return
     Config
@@ -50,7 +52,6 @@ parseConfig cfg = do
       , repeatText = repeatText
       , keysAmount = keysAmount
       , defaultRepeatAmount = defaultRepeatAmount
-      , sadText = sadText
       , secTimeout = secTimeout
       , diffTimeBackupPeriod = backupPeriod
       , vkToken = vkToken
@@ -59,4 +60,6 @@ parseConfig cfg = do
       , backupPath = backupPath
       , logPath = logPath
       , logSinceLevel = logSinceLevel
+      , vkEnabled = vkEnabled
+      , tgEnabled = tgEnabled
       }

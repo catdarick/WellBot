@@ -4,12 +4,12 @@ module Telegram.Api.Types where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
+import           Data.Maybe        (fromJust)
 import           GHC.Generics      (Generic)
 
-import Data.Maybe (fromJust)
 type ChatId = Integer
-type MessageId = Integer
 
+type MessageId = Integer
 
 -------
 newtype Chat =
@@ -44,13 +44,12 @@ data Update =
 instance FromJSON Update where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase
 
-
 -------
 data Response respType =
   Response
-    { responseOk     :: Bool
-    , responseResult :: Maybe respType
-    , responseErrorCode :: Maybe Int
+    { responseOk          :: Bool
+    , responseResult      :: Maybe respType
+    , responseErrorCode   :: Maybe Int
     , responseDescription :: Maybe String
     }
   deriving (Generic, Show)

@@ -4,18 +4,18 @@
 
 module Telegram.Instances where
 
-import qualified Class.Bot                 as Class
-import qualified Class.Update              as Class
-import           Control.Exception         (SomeException, try)
-import           Control.Monad.Trans.Class (MonadTrans (lift))
-import           Control.Monad.Trans.State (gets, modify)
-import           Data.Function             ((&))
-import           Data.Maybe                (fromJust, isJust)
-import qualified Database.Interact         as DB
-import qualified Database.Types            as DB
-import           ErrorHandler
-import qualified Telegram.Api.Interact     as Api
-import qualified Telegram.Api.Types        as Api
+import qualified Bot.Classes                 as Class
+import qualified Bot.State.Database.Interact as DB
+import qualified Bot.State.Database.Types    as DB
+import qualified Bot.State.Interact          as State
+import           Control.Exception           (SomeException, try)
+import           Control.Monad.Trans.Class   (MonadTrans (lift))
+import           Control.Monad.Trans.State   (gets, modify)
+import           Data.Function               ((&))
+import           Data.Maybe                  (fromJust, isJust)
+import qualified Logger.Interact             as Log
+import qualified Telegram.Api.Interact       as Api
+import qualified Telegram.Api.Types          as Api
 
 data TgBot =
   TgBot
@@ -33,10 +33,10 @@ instance Class.Bot TgBot where
   sendMessage a = Api.sendMessage
   forwardMessage a = Api.forwardMessage
   sendKeyboardWithText a = Api.sendKeyboardWithText
-  initBot a = const $ return ()
-  getUpdatesAndOffset a config = do
+  getUpdatesAndOffset = do
+    (bot, config) <- State.getBotAndConfig
     offset <- DB.getOffset
-    updates <- withErrorLogging$ Api.getUpdates config offset
+    updates <- Log.withErrorLogging $ Api.getUpdates config offset
     let filtredUpdates = filter isJustMessage updates
     let newOffset = getOffset offset updates
     return (filtredUpdates, newOffset)

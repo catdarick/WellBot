@@ -3,21 +3,42 @@
 
 module Logic.Helpers where
 
-import           Class.Bot
-import           Class.Update
+import           Bot.Classes
+import           Bot.State.Database.Types hiding (RepeatsAmount)
+import           Bot.State.Types
 import           Config
-import           Data.Map       (fromList)
-import           Data.Time      (UTCTime (UTCTime), utctDay, utctDayTime)
-import           Database.Types
+import           Data.Map                 (fromList)
+import           Data.Time                (UTCTime (UTCTime), utctDay,
+                                           utctDayTime)
+import           Logger.Types
+
 type WithAwaiting = Bool
+
 type WithAlreadySet = Bool
+
+defChatOrUserId :: ChatId
 defChatOrUserId = 10
 
+defSettedRepAmount :: RepeatsAmount
 defSettedRepAmount = 3
 
+defMessageId :: Integer
 defMessageId = 20
 
+defOffset :: Integer
 defOffset = 100
+
+getStateWithDb ::
+     Database offsetType additionalType
+  -> BotState_ offsetType additionalType TestBot
+getStateWithDb db =
+  BotState_
+    { prevTime = UTCTime {utctDay = toEnum 0, utctDayTime = 0}
+    , bot = TestBot
+    , config = defConfig
+    , database = db
+    , logOffset = 0
+    }
 
 getDb :: Integer -> WithAwaiting -> WithAlreadySet -> Database Integer ()
 getDb offset withAwaiting withAlreadySet =
@@ -25,17 +46,15 @@ getDb offset withAwaiting withAlreadySet =
     { offset = offset
     , chats = fromList [(defChatOrUserId, defSettedRepAmount) | withAlreadySet]
     , awaitingChatsID = [defChatOrUserId | withAwaiting]
-    , prevTime = UTCTime {utctDay = toEnum 0, utctDayTime = 0}
     , additionalInfo = Nothing
     }
 
-config :: Config
-config =
+defConfig :: Config
+defConfig =
   Config
     { tgToken = ""
     , helpText = "helpText"
     , repeatText = "repeatText "
-    , sadText = ""
     , keysAmount = 5
     , defaultRepeatAmount = 1
     , secTimeout = 10
@@ -44,6 +63,10 @@ config =
     , vkToken = ""
     , vkGroupId = 444
     , backupPath = "./"
+    , logPath = "./"
+    , logSinceLevel = WARNING
+    , vkEnabled = False
+    , tgEnabled = False
     }
 
 data UpdateTest =
@@ -58,24 +81,23 @@ instance Update UpdateTest where
   getMessageId = messageId
   getUserOrChatId = userOrChatId
 
-
-
 getUpdateWithTextAndOffset :: Maybe String -> UpdateTest
 getUpdateWithTextAndOffset maybeText =
-      UpdateTest
-        { messageId = defMessageId
-        , userOrChatId = defChatOrUserId
-        , maybeText = maybeText
-        }
+  UpdateTest
+    { messageId = defMessageId
+    , userOrChatId = defChatOrUserId
+    , maybeText = maybeText
+    }
 
 data TestBot =
   TestBot
+  deriving (Show, Eq)
 
 instance Bot TestBot where
   type OffsetType TestBot = Integer
   type UpdateType TestBot = UpdateTest
-  type ReturningType TestBot = String
-  backupName = const ""
+  type RetType TestBot = String
+  name = const "Test"
   defaultOffset = const 0
   sendMessage _ _ userOrChatId text =
     return $ "sendMessage " ++ show userOrChatId ++ " " ++ text
@@ -83,4 +105,4 @@ instance Bot TestBot where
     return $ "forwardMessage " ++ show userOrChatId ++ " " ++ show messageId
   sendKeyboardWithText _ _ userOrChatId text =
     return $ "sendKeyboardWithText " ++ show userOrChatId ++ " " ++ text
-  getUpdatesAndOffset _ _ = return ([], 0)
+  getUpdatesAndOffset = return ([], 0)

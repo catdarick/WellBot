@@ -1,4 +1,4 @@
-module Database.Types where
+module Bot.State.Database.Types where
 
 import           Control.Monad.Trans.State (StateT)
 import           Data.Aeson.Types          (FromJSON, ToJSON)
@@ -17,7 +17,6 @@ data Database offsetType additionalInfoType =
     { offset          :: offsetType
     , chats           :: Chats
     , awaitingChatsID :: [Integer]
-    , prevTime        :: UTCTime
     , additionalInfo  :: Maybe additionalInfoType
     }
   deriving (Read, Show, Eq)

@@ -6,8 +6,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           GHC.Generics      (Generic)
 
-
-
 data Keyboardbutton =
   Keyboardbutton
     { keyboardbuttonText :: String
@@ -18,7 +16,6 @@ instance ToJSON Keyboardbutton where
   toJSON = genericToJSON $ aesonPrefix snakeCase
 
 -------
-
 data Replykeyboardmarkup =
   Replykeyboardmarkup
     { replykeyboardmarkupKeyboard        :: [[Keyboardbutton]]
@@ -31,7 +28,6 @@ instance ToJSON Replykeyboardmarkup where
   toJSON = genericToJSON $ aesonPrefix snakeCase
 
 -------
-
 data Messagewithkb =
   Messagewithkb
     { messagewithkbReplyMarkup :: Replykeyboardmarkup

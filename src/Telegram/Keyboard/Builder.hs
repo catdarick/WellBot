@@ -1,10 +1,10 @@
 module Telegram.Keyboard.Builder where
 
-import Telegram.Keyboard.Types
-import Config
-import Data.Function ((&))
-import Data.Aeson (encode)
-import Data.ByteString.Lazy.Char8 (unpack)
+import           Config
+import           Data.Aeson                 (encode)
+import           Data.ByteString.Lazy.Char8 (unpack)
+import           Data.Function              ((&))
+import           Telegram.Keyboard.Types
 
 getKeyboardJSON :: Config -> String
 getKeyboardJSON config = do

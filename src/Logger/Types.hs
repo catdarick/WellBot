@@ -14,10 +14,10 @@ instance Ord Level where
   (<=) a b = fromEnum a <= fromEnum b
 
 instance Configured Level where
-  convert (String t) = Just $ getLevelFromString (showText t)
+  convert (String t) = Just $ getLevelFromString (show t)
 
 getLevelFromString :: String -> Level
-getLevelFromString "DEBUG"   = DEBUG
-getLevelFromString "INFO"    = INFO
-getLevelFromString "WARNING" = WARNING
-getLevelFromString _ = WARNING
+getLevelFromString "\"DEBUG\""   = DEBUG
+getLevelFromString "\"INFO\""    = INFO
+getLevelFromString "\"WARNING\"" = WARNING
+getLevelFromString _             = WARNING
