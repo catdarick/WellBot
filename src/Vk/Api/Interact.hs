@@ -17,8 +17,8 @@ import           System.Random              (getStdRandom, randomR)
 import           Vk.Api.Types
 import           Vk.Keyboard.Builder
 
-doGetRequest :: p -> String -> [Char] -> [(String, String)] -> IO LBS.ByteString
-doGetRequest config server method queryPairs = do
+doGetRequest :: String -> String -> [(String, String)] -> IO LBS.ByteString
+doGetRequest server method queryPairs = do
   initReq <- Conduit.parseRequest server
   let req = setPathAndQueryString initReq bsUrlPath bsQueryPairs
   bsResponse <- httpBS req
@@ -40,7 +40,7 @@ getUpdatesAndOffset config server offset token = do
   let timeoutPair = ("wait", show $ config & secTimeout)
   let offsetPair = ("ts", offset)
   let queryPairs = [actionPair, tokenPair, offsetPair, timeoutPair, versionPair]
-  bsResponse <- doGetRequest config server "" queryPairs
+  bsResponse <- doGetRequest server "" queryPairs
   let maybeUpdates = decode bsResponse :: Maybe Updates
   case maybeUpdates of
     Just updates ->
@@ -67,7 +67,7 @@ getServerAndTokenAndOffset config = do
   let tokenPair = ("access_token", config & vkToken)
   let versionPair = ("v", config & vkApiVersion)
   let queryPairs = [groupIdPair, tokenPair, versionPair]
-  bsResponse <- doGetRequest config defaultServer path queryPairs
+  bsResponse <- doGetRequest defaultServer path queryPairs
   let maybeResponse = decode bsResponse :: Maybe (Response Longpoll)
   return maybeResponse
 
@@ -80,7 +80,7 @@ sendMessage config userId text = do
   let tokenPair = ("access_token", config & vkToken)
   let versionPair = ("v", config & vkApiVersion)
   let queryPairs = [userIdPair, randomIdPair, textPair, tokenPair, versionPair]
-  bsResponse <- doGetRequest config defaultServer sendPath queryPairs
+  bsResponse <- doGetRequest defaultServer sendPath queryPairs
   return ()
 
 forwardMessage :: Config -> UserId -> MessageId -> IO ()
@@ -100,7 +100,7 @@ forwardMessage config userId messageId = do
         , tokenPair
         , versionPair
         ]
-  bsResponse <- doGetRequest config defaultServer sendPath queryPairs
+  bsResponse <- doGetRequest defaultServer sendPath queryPairs
   return ()
 
 sendKeyboardWithText :: Config -> UserId -> String -> IO ()
@@ -120,7 +120,7 @@ sendKeyboardWithText config userId text = do
         , tokenPair
         , versionPair
         ]
-  bsResponse <- doGetRequest config defaultServer sendPath queryPairs
+  bsResponse <- doGetRequest defaultServer sendPath queryPairs
   return ()
 
 getRandomInt64 :: IO Integer

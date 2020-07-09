@@ -8,6 +8,7 @@ import           Data.Function             ((&))
 import           Bot.Logic
 import           Logic.Helpers
 import           Test.HUnit
+import GHC.IO (unsafeDupablePerformIO, unsafePerformIO)
 
 tests :: Test
 tests =
@@ -24,13 +25,13 @@ testRepeat :: Test
 testRepeat = TestCase (assertEqual "testRepeat failed" expectedRes res)
   where
     res =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       runStateT (handleUpdate initUpdate) initState
     initState = getStateWithDb $ getDb defOffset False False
     initUpdate = getUpdateWithTextAndOffset (Just "/repeat")
     expectedState = getStateWithDb $ getDb defOffset True False
     expectedAction =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       sendKeyboardWithText
         TestBot
         defConfig
@@ -43,7 +44,7 @@ testKeyboardResponse =
   TestCase (assertEqual "testKeyboardResponse failed" expectedRes res)
   where
     res =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       runStateT (handleUpdate initUpdate) initState
     initState = getStateWithDb $ getDb defOffset True False
     initUpdate = getUpdateWithTextAndOffset (Just "3")
@@ -56,13 +57,13 @@ testForwardDefault =
   TestCase (assertEqual "testForwardDefault failed" expectedRes res)
   where
     res =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       runStateT (handleUpdate initUpdate) initState
     initState = getStateWithDb $ getDb defOffset False False
     initUpdate = getUpdateWithTextAndOffset (Just "smth")
     expectedState = getStateWithDb $ getDb defOffset False False
     expectedAction =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       forwardMessageNTimes
         TestBot
         defConfig
@@ -76,13 +77,13 @@ testForwardWithAlreadySet =
   TestCase (assertEqual "testForwardWithAlreadySet failed" expectedRes res)
   where
     res =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       runStateT (handleUpdate initUpdate) initState
     initState = getStateWithDb $ getDb defOffset False True
     initUpdate = getUpdateWithTextAndOffset (Just "smth")
     expectedState = getStateWithDb $ getDb defOffset False True
     expectedAction =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       forwardMessageNTimes
         TestBot
         defConfig
@@ -95,13 +96,13 @@ testHelp :: Test
 testHelp = TestCase (assertEqual "testHelp failed" expectedRes res)
   where
     res =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       runStateT (handleUpdate initUpdate) initState
     initState = getStateWithDb $ getDb defOffset False True
     initUpdate = getUpdateWithTextAndOffset (Just "/help")
     expectedState = getStateWithDb $ getDb defOffset False True
     expectedAction =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       sendMessage TestBot defConfig defChatOrUserId (defConfig & helpText)
     expectedRes = (expectedAction, expectedState)
 
@@ -109,13 +110,13 @@ testEcho :: Test
 testEcho = TestCase (assertEqual "testEcho failed" expectedRes res)
   where
     res =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
       runStateT (handleUpdate initUpdate) initState
     initState = getStateWithDb $ getDb defOffset False False
     initUpdate = getUpdateWithTextAndOffset Nothing
     expectedState = getStateWithDb $ getDb defOffset False False
     expectedAction =
-      inlinePerformIO $
+      unsafeDupablePerformIO $
        forwardMessageNTimes
         TestBot
         defConfig
