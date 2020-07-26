@@ -5,6 +5,7 @@ import qualified Bot.State.Database.Interact as DB
 import           Bot.State.Types
 import           Config
 import           Control.Monad               (when)
+import           Control.Monad.Extra         (whenM)
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Control.Monad.Trans.State   (get, gets, put)
 import           Data.Function               ((&))
@@ -33,12 +34,10 @@ isTimeToBackup = do
   curTime <- lift getCurrentTime
   return $ (diffUTCTime curTime prevTime) > (config & diffTimeBackupPeriod)
 
-backupDatabaseIfItsTime :: Bot a => BotStateT a IO ()
-backupDatabaseIfItsTime = do
-  isTimeToBackup <- isTimeToBackup
-  when isTimeToBackup $ do
-    DB.backup
-    updateTime
+backupAndUpdateTimer :: Bot a => BotStateT a IO ()
+backupAndUpdateTimer = do
+  DB.backup
+  updateTime
 
 getInitialBotState ::
      (Read additionalInfoType, Show additionalInfoType, Bot a)

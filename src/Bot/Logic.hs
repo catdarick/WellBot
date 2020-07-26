@@ -13,6 +13,7 @@ import           Bot.State.Types
 import           Config
 import           Control.Exception           (SomeException, try)
 import           Control.Monad               (replicateM_, void, when)
+import           Control.Monad.Extra         (whenM)
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Control.Monad.Trans.State   (StateT (runStateT), gets)
 import           Data.Char                   (isDigit)
@@ -83,7 +84,7 @@ loop = do
     Log.withDebugLogging "getUpdatesAndOffset" getUpdatesAndOffset
   handleUpdates updates
   DB.setOffset newOffset
-  State.backupDatabaseIfItsTime
+  whenM State.isTimeToBackup State.backupAndUpdateTimer
   loop
   where
     handleUpdates = mapM_ handleUpdateWithDebugLogging

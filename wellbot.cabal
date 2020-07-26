@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ad3cc67a7d14c52909d66b2a07d4df27e04002d4f5dfd9ee0b73958db55fd7d1
+-- hash: 9a47e9dcaa76d3805d44fa32050dc4c93e167f876f859b35a9587538edd7cc44
 
 name:           wellbot
 version:        0.1.0.0
@@ -60,6 +60,7 @@ library
     , bytestring
     , configurator
     , containers
+    , extra
     , http-client
     , http-conduit
     , lens
@@ -85,6 +86,7 @@ executable wellbot-exe
     , bytestring
     , configurator
     , containers
+    , extra
     , http-client
     , http-conduit
     , lens
@@ -114,6 +116,7 @@ test-suite wellbot-test
     , bytestring
     , configurator
     , containers
+    , extra
     , http-client
     , http-conduit
     , lens
