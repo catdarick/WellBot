@@ -46,12 +46,12 @@ warn msg = do
 incLogOffset :: BotStateIO a ()
 incLogOffset =
   modify
-    (\st@BotState_ {logOffset = logOffset} -> st {logOffset = logOffset + 1})
+    (\st@BotState {logOffset = logOffset} -> st {logOffset = logOffset + 1})
 
 decLogOffset :: BotStateIO a ()
 decLogOffset =
   modify
-    (\st@BotState_ {logOffset = logOffset} -> st {logOffset = logOffset - 1})
+    (\st@BotState {logOffset = logOffset} -> st {logOffset = logOffset - 1})
 
 withDebugLogging :: Bot a => String -> BotStateIO a b -> BotStateIO a b
 withDebugLogging functionName function = do

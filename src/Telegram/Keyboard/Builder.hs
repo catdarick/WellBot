@@ -11,10 +11,10 @@ getKeyboardJSON config = do
   let kAmount = config & keysAmount
   unpack $
     encode $
-    Replykeyboardmarkup
-      { replykeyboardmarkupKeyboard = [map intToKey [1,2 .. kAmount]]
-      , replykeyboardmarkupOneTimeKeyboard = True
-      , replykeyboardmarkupResizeKeyboard = True
+    Markup
+      { markupKeyboard = [map intToKey [1,2 .. kAmount]]
+      , markupOneTimeKeyboard = True
+      , markupResizeKeyboard = True
       }
   where
-    intToKey x = Keyboardbutton {keyboardbuttonText = show x}
+    intToKey x = Button {buttonText = show x}

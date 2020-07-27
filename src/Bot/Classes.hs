@@ -12,18 +12,16 @@ import           Config
 import           Control.Monad             (replicateM, replicateM_, void)
 import           Control.Monad.Trans.State (StateT)
 
+type ReadShow a b = (Read a, Show a, Read b, Show b)
+
+type BotStateT a = (StateT (BotState (OffsetType a) (AdditionalType a) a))
+
+type BotStateIO a b = BotStateT a IO b
+
 class Update a where
   getMaybeText :: a -> Maybe String
   getUserOrChatId :: a -> Integer
   getMessageId :: a -> Integer
-
-type ReadShow a b = (Read a, Show a, Read b, Show b)
-
-type BotFriendly a = (Bot a, ReadShow (OffsetType a) (AdditionalType a))
-
-type BotStateT a = (StateT (BotState_ (OffsetType a) (AdditionalType a) a))
-
-type BotStateIO a b = BotStateT a IO b
 
 class ( Update (UpdateType a)
       , Monoid (RetType a)

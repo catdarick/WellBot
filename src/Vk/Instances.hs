@@ -22,11 +22,10 @@ import           Vk.Types
 
 instance Class.Update Api.Update where
   getMaybeText =
-    Api.messageText . fromJust . Api.objecttMessage . Api.updateObject
+    Api.messageText . fromJust . Api.objectMessage . Api.updateObject
   getUserOrChatId =
-    Api.messageFromId . fromJust . Api.objecttMessage . Api.updateObject
-  getMessageId =
-    Api.messageId . fromJust . Api.objecttMessage . Api.updateObject
+    Api.messageFromId . fromJust . Api.objectMessage . Api.updateObject
+  getMessageId = Api.messageId . fromJust . Api.objectMessage . Api.updateObject
 
 instance Class.Bot VkBot where
   type OffsetType VkBot = String
@@ -59,8 +58,9 @@ instance Class.Bot VkBot where
           updateServerAndTokenAndOffset config
         return ([], offset)
     where
-      isJustMessage = isJust . Api.objecttMessage . Api.updateObject
+      isJustMessage = isJust . Api.objectMessage . Api.updateObject
 
+updateServerAndTokenAndOffset :: Config -> Class.BotStateIO VkBot ()
 updateServerAndTokenAndOffset config = do
   eitherMaybeResponse <- lift $ try $ Api.getServerAndTokenAndOffset config
   case eitherMaybeResponse of

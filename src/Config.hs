@@ -2,11 +2,12 @@
 
 module Config where
 
-import           Data.Configurator (require)
-import           Data.Fixed        (Pico)
-import           Data.Time         (DiffTime, NominalDiffTime, UTCTime,
-                                    secondsToDiffTime)
-import qualified Logger.Types      as Log
+import           Data.Configurator       (require)
+import qualified Data.Configurator.Types as Lib
+import           Data.Fixed              (Pico)
+import           Data.Time               (DiffTime, NominalDiffTime, UTCTime,
+                                          secondsToDiffTime)
+import qualified Logger.Types            as Log
 
 data Config =
   Config
@@ -28,22 +29,23 @@ data Config =
     }
   deriving (Show, Eq)
 
+parseConfig :: Lib.Config -> IO Config
 parseConfig cfg = do
-  tgToken <- require cfg "tgToken" :: IO String
-  helpText <- require cfg "commandHelpText" :: IO String
-  repeatText <- require cfg "commandRepeatText" :: IO String
-  keysAmount <- require cfg "tgKeysAmount" :: IO Integer
-  defaultRepeatAmount <- require cfg "defaultRepeatAmount" :: IO Integer
-  secTimeout <- require cfg "secLongpollingTimeout" :: IO Int
-  secPeriod <- require cfg "secDatabaseBackupPeriod" :: IO Int
-  vkToken <- require cfg "vkToken" :: IO String
-  vkGroupId <- require cfg "vkGroupId" :: IO Integer
-  vkApiVersion <- require cfg "vkApiVersion" :: IO String
-  backupPath <- require cfg "backupPath" :: IO String
-  logPath <- require cfg "logPath" :: IO String
-  logSinceLevel <- require cfg "logSinceLevel" :: IO Log.Level
-  vkEnabled <- require cfg "vkEnabled" :: IO Bool
-  tgEnabled <- require cfg "tgEnabled" :: IO Bool
+  tgToken <- require cfg "tgToken"
+  helpText <- require cfg "commandHelpText"
+  repeatText <- require cfg "commandRepeatText"
+  keysAmount <- require cfg "keysAmount"
+  defaultRepeatAmount <- require cfg "defaultRepeatAmount"
+  secTimeout <- require cfg "secLongpollingTimeout"
+  secPeriod <- require cfg "secDatabaseBackupPeriod"
+  vkToken <- require cfg "vkToken"
+  vkGroupId <- require cfg "vkGroupId"
+  vkApiVersion <- require cfg "vkApiVersion"
+  backupPath <- require cfg "backupPath"
+  logPath <- require cfg "logPath"
+  logSinceLevel <- require cfg "logSinceLevel"
+  vkEnabled <- require cfg "vkEnabled"
+  tgEnabled <- require cfg "tgEnabled"
   let backupPeriod = sum $ replicate secPeriod (1 :: NominalDiffTime)
   return
     Config

@@ -30,9 +30,9 @@ defOffset = 100
 
 getStateWithDb ::
      Database offsetType additionalType
-  -> BotState_ offsetType additionalType TestBot
+  -> BotState offsetType additionalType TestBot
 getStateWithDb db =
-  BotState_
+  BotState
     { prevTime = UTCTime {utctDay = toEnum 0, utctDayTime = 0}
     , bot = TestBot
     , config = defConfig

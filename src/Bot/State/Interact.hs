@@ -43,13 +43,13 @@ getInitialBotState ::
      (Read additionalInfoType, Show additionalInfoType, Bot a)
   => a
   -> Config
-  -> IO (BotState_ (OffsetType a) additionalInfoType a)
+  -> IO (BotState (OffsetType a) additionalInfoType a)
 getInitialBotState bot config = do
   let backupName = (bot & name) ++ ".backup"
   prevTime <- getCurrentTime
   db <- DB.getRestoredOrClearDatabase backupName (defaultOffset bot)
   let botState =
-        BotState_
+        BotState
           { bot = bot
           , config = config
           , database = db

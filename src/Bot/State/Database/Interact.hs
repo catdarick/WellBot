@@ -3,10 +3,11 @@
 
 module Bot.State.Database.Interact where
 
-import           Bot.Classes               (Bot, BotStateIO, BotStateT,
-                                            OffsetType, ReadShow, name)
+import           Bot.Classes               (AdditionalType, Bot, BotStateIO,
+                                            BotStateT, OffsetType, ReadShow,
+                                            name)
 import           Bot.State.Database.Types
-import           Bot.State.Types           (BotState_, bot, config, database)
+import           Bot.State.Types           (BotState, bot, config, database)
 import           Config
 import           Control.Exception         (SomeException, try)
 import           Control.Monad             (when)
@@ -22,9 +23,10 @@ import           Data.Time                 (UTCTime, getCurrentTime)
 import qualified Logger.Interact           as Log
 import           Text.Read                 (readMaybe)
 
-type BotState a b t = StateT (BotState_ a b t)
-
-setDb :: Monad m => Database a b -> (BotState a b t) m ()
+setDb ::
+     (Bot a, Monad m)
+  => Database (OffsetType a) (AdditionalType a)
+  -> (BotStateT a) m ()
 setDb db = do
   state <- get
   put $ state {database = db}
@@ -91,7 +93,7 @@ setRepeatsAmount chatId repAmount = do
   delChat chatId
   addChat chatId repAmount
 
-backup :: (Show a, Show b, Bot t) => (BotState a b t) IO ()
+backup :: Bot a => BotStateIO a ()
 backup = do
   path <- gets $backupPath . config
   name <- gets $ name . bot
@@ -101,10 +103,7 @@ backup = do
   lift $ writeFile fullPath strDB
 
 getRestoredOrClearDatabase ::
-     ReadShow offsetType additionalInfoType
-  => FilePath
-  -> offsetType
-  -> IO (Database offsetType additionalInfoType)
+     (Read a, Read b) => FilePath -> a -> IO (Database a b)
 getRestoredOrClearDatabase path defaultOffset = do
   curTime <- getCurrentTime
   eitherText <- try $ readFile path
@@ -120,8 +119,7 @@ getRestoredOrClearDatabase path defaultOffset = do
       let maybeDB = readMaybe text
       return $ fromMaybe defaultDB maybeDB
 
-getInitialDatabase ::
-     offsetType -> UTCTime -> Database offsetType additionalInfoType
+getInitialDatabase :: offsetType -> p -> Database offsetType additionalInfoType
 getInitialDatabase defaultOffset curTime =
   Database
     { offset = defaultOffset

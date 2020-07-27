@@ -10,8 +10,8 @@ type MesssageId = Integer
 
 type RepeatsAmount = Integer
 
-data BotState_ offsetType additionalType botType =
-  BotState_
+data BotState offsetType additionalType botType =
+  BotState
     { config    :: Config
     , bot       :: botType
     , logOffset :: Int
