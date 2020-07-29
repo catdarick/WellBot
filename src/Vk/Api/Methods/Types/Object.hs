@@ -1,19 +1,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Vk.Api.Types.Update where
+module Vk.Api.Methods.Types.Object where
 
 import           Data.Aeson                 hiding (Object)
 import           Data.Aeson.Casing          (aesonPrefix)
 import           Data.Aeson.Casing.Internal (snakeCase)
 import           GHC.Generics               (Generic)
-import           Vk.Api.Types.Object
+import          Vk.Api.Methods.Types.Message
 
-data Update =
-  Update
-    { updateType   :: String
-    , updateObject :: Object
+data Object =
+  Object
+    { objectMessage :: Maybe Message
     }
   deriving (Generic, Show, Eq)
 
-instance FromJSON Update where
+instance FromJSON Object where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase

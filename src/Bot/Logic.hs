@@ -6,13 +6,15 @@
 module Bot.Logic where
 
 import           Bot.Classes
+import           Bot.ErrorException
 import qualified Bot.State.Database.Interact as DB
 import qualified Bot.State.Database.Types    as DB
 import qualified Bot.State.Interact          as State
 import           Bot.State.Types
 import           Config
-import           Control.Exception           (SomeException, try)
+import           Control.Concurrent          (threadDelay)
 import           Control.Monad               (replicateM_, void, when)
+import           Control.Monad.Catch         (try)
 import           Control.Monad.Extra         (whenM)
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Control.Monad.Trans.State   (StateT (runStateT), gets)
@@ -78,18 +80,34 @@ handleUpdate update = do
     Just text      -> onText userOrChatId text messageId
     Nothing        -> echoWithLogging userOrChatId messageId
 
-loop :: Bot a => BotStateIO a ()
-loop = do
+getAndHandleUpdates :: Bot a => BotStateIO a ()
+getAndHandleUpdates = do
   (updates, newOffset) <-
     Log.withDebugLogging "getUpdatesAndOffset" getUpdatesAndOffset
   handleUpdates updates
   DB.setOffset newOffset
   whenM State.isTimeToBackup State.backupAndUpdateTimer
-  loop
   where
     handleUpdates = mapM_ handleUpdateWithDebugLogging
     handleUpdateWithDebugLogging update =
       Log.withDebugLogging "handleUpdate" $ handleUpdate update
+
+loop :: Bot a => BotStateIO a ()
+loop = do
+  res <- try getAndHandleUpdates
+  case res of
+    Left BadTokenException -> Log.fatal $ show BadTokenException
+    Left NoConnectionException -> logAndGoLoopAfterDelay NoConnectionException
+    Left warnException -> logAndGoLoop warnException
+    Right _ -> loop
+  where
+    logAndGoLoopAfterDelay exc = do
+      Log.warn $ show NoConnectionException
+      lift $ threadDelay (10 ^ 7)
+      loop
+    logAndGoLoop exc = do
+      Log.warn (show exc)
+      loop
 
 start :: Bot a => a -> Config -> IO ()
 start bot config = do

@@ -3,9 +3,10 @@
 module Logger.Interact where
 
 import           Bot.Classes
+import           Bot.ErrorException
 import           Bot.State.Types
 import           Config
-import           Control.Exception         (SomeException, catch, try)
+import           Control.Exception         (catch, try)
 import           Control.Monad             (when)
 import           Control.Monad.Trans.Class (MonadTrans (lift))
 import           Control.Monad.Trans.State (gets, modify)
@@ -13,6 +14,7 @@ import           Data.Function             ((&))
 import           Data.Time                 (getCurrentTime)
 import           GHC.Exception.Type        (SomeException (SomeException))
 import           Logger.Types
+import           System.Exit               (exitFailure, exitWith)
 import           Text.Printf               (printf)
 
 appendLog :: Bot a => String -> String -> BotStateIO a ()
@@ -32,6 +34,11 @@ debug :: Bot a => String -> BotStateIO a ()
 debug msg = do
   logSinceLevel <- gets $logSinceLevel . config
   when (logSinceLevel <= DEBUG) $ appendLog "DEBUG" msg
+
+fatal :: Bot a => String -> BotStateIO a ()
+fatal msg = do
+  logSinceLevel <- gets $logSinceLevel . config
+  when (logSinceLevel <= FATAL) $ appendLog "FATAL" msg
 
 info :: Bot a => String -> BotStateIO a ()
 info msg = do
@@ -70,7 +77,7 @@ withErrorLogging :: (Bot a, Monoid b) => IO b -> BotStateIO a b
 withErrorLogging f = do
   res <- lift (try f)
   case res of
-    Left (e :: SomeException) -> do
+    Left (e :: ErrorException) -> do
       warn $ show e
       return mempty
     Right x -> return x

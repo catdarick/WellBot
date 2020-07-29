@@ -36,6 +36,7 @@ dependencies:
 - HUnit
 - random
 - extra
+- exceptions
 library:
   source-dirs: src
 

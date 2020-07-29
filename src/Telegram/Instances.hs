@@ -36,12 +36,12 @@ instance Class.Bot TgBot where
   getUpdatesAndOffset = do
     (bot, config) <- State.getBotAndConfig
     offset <- DB.getOffset
-    updates <- Log.withErrorLogging $ Api.getUpdates config offset
+    updates <- lift $ Api.getUpdates config offset
     let filtredUpdates = filter isJustMessage updates
     let newOffset = getOffset offset updates
     return (filtredUpdates, newOffset)
     where
       getOffset defaultOffset [] = defaultOffset
       getOffset defaultOffset xs = 1 + (last xs & Api.updateUpdateId)
-      isJustMessage Api.Update {Api.updateMessage = maybeMessage} =
-        isJust maybeMessage
+      isJustMessage  =
+        isJust . Api.updateMessage

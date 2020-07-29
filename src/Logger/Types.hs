@@ -8,6 +8,7 @@ data Level
   = DEBUG
   | INFO
   | WARNING
+  | FATAL
   deriving (Show, Eq, Enum)
 
 instance Ord Level where
@@ -20,4 +21,5 @@ getLevelFromString :: String -> Level
 getLevelFromString "\"DEBUG\""   = DEBUG
 getLevelFromString "\"INFO\""    = INFO
 getLevelFromString "\"WARNING\"" = WARNING
+getLevelFromString "\"FATAL\""   = FATAL
 getLevelFromString _             = WARNING

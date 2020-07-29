@@ -2,9 +2,11 @@
 
 module Config where
 
+import           Control.Monad           (when)
 import           Data.Configurator       (require)
 import qualified Data.Configurator.Types as Lib
 import           Data.Fixed              (Pico)
+import           Data.Function           ((&))
 import           Data.Time               (DiffTime, NominalDiffTime, UTCTime,
                                           secondsToDiffTime)
 import qualified Logger.Types            as Log
@@ -65,3 +67,10 @@ parseConfig cfg = do
       , vkEnabled = vkEnabled
       , tgEnabled = tgEnabled
       }
+
+checkConfig :: Config -> Either String ()
+checkConfig config
+  | (config & vkEnabled) && (config & vkToken) == "***" = Left "vkToken"
+  | (config & vkEnabled) && (config & vkGroupId) == 111111111 = Left "vkGroupId"
+  | (config & tgEnabled) && (config & tgToken) == "***:***" = Left "tgToken"
+  | otherwise = Right ()

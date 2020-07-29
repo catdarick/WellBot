@@ -1,4 +1,4 @@
-module Vk.Api.Types.Synonyms where
+module Vk.Api.Methods.Types.Synonyms where
 
 type UserId = Integer
 

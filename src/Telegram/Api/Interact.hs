@@ -3,8 +3,10 @@
 
 module Telegram.Api.Interact where
 
+import           Bot.ErrorException
 import           Config
 import           Control.Monad               (unless)
+import           Control.Monad.Catch         (throwM, try)
 import           Data.Aeson                  (decode, encode)
 import qualified Data.ByteString.Char8       as BS
 import qualified Data.ByteString.Lazy.Char8  as LBS
@@ -12,7 +14,7 @@ import           Data.Function               ((&))
 import           Data.Maybe                  (fromMaybe)
 import qualified Network.HTTP.Client.Conduit as Conduit
 import qualified Network.HTTP.Conduit        as Conduit
-import           Network.HTTP.Simple         (httpBS)
+import           Network.HTTP.Simple         (HttpException, httpBS)
 import           Telegram.Api.Error
 import           Telegram.Api.Types
 import           Telegram.Keyboard.Builder
@@ -21,8 +23,10 @@ getRequest :: Config -> String -> [(String, String)] -> IO LBS.ByteString
 getRequest config method queryPairs = do
   initReq <- Conduit.parseRequest "https://api.telegram.org"
   let req = setPathAndQueryString initReq bsUrlPath bsQueryPairs
-  bsResponse <- httpBS req
-  returnResponseBody bsResponse
+  eitherBsResponse <- try $ httpBS req
+  case eitherBsResponse of
+    Left (e :: HttpException) -> throwM NoConnectionException
+    Right bsResponse          -> returnResponseBody bsResponse
   where
     timeoutQueryPair = ("timeout", show $ config & secTimeout)
     stringPairToByteStringPair (k, v) = (BS.pack k, Just $ BS.pack v)

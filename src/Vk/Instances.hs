@@ -5,19 +5,24 @@
 module Vk.Instances where
 
 import qualified Bot.Classes                 as Class
+import           Bot.ErrorException
 import qualified Bot.State.Database.Interact as DB
 import qualified Bot.State.Database.Types    as DB
 import qualified Bot.State.Interact          as State
 import           Bot.State.Types
 import           Config
 import           Control.Exception           (SomeException, catch, try)
+import           Control.Monad.Catch         (MonadThrow (throwM))
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Control.Monad.Trans.State   (StateT, gets, modify)
 import           Data.Function               ((&))
 import           Data.Maybe                  (fromJust, isJust)
 import qualified Logger.Interact             as Log
-import qualified Vk.Api.Interact             as Api
-import qualified Vk.Api.Types                as Api
+
+import qualified Vk.Api.Longpoll.Interact    as Api
+import qualified Vk.Api.Longpoll.Types       as Api
+import qualified Vk.Api.Methods.Interact     as Api
+import qualified Vk.Api.Methods.Types        as Api
 import           Vk.Types
 
 instance Class.Update Api.Update where
@@ -68,12 +73,13 @@ updateServerAndTokenAndOffset config = do
     Right maybeResponse ->
       case maybeResponse of
         Just response -> do
-          let server = response & Api.responseResponse & Api.longpollServer
-          let token = response & Api.responseResponse & Api.longpollKey
-          let offset = response & Api.responseResponse & Api.longpollTs
+          result <- Api.getResultOrThrow response
+          let server = result & Api.longpollServer
+          let token = result & Api.longpollKey
+          let offset = result & Api.longpollTs
           setServerAndToken server token
           DB.setOffset offset
-        Nothing -> Log.warn "Cannot get server and token for LongPolling"
+        Nothing -> throwM BadTokenException
   where
     setServerAndToken server token = do
       db <- gets database

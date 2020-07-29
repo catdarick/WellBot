@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 68b35c6c71ddf6e8b2d38912c578c32fa4e896d12589a425c3593825c5f22e2e
+-- hash: 50531c648ff7e8a9ec3188c9770d40d05745896f5ecb9bffb5c00655b1ce2d8b
 
 name:           wellbot
 version:        0.1.0.0
@@ -28,13 +28,13 @@ source-repository head
 library
   exposed-modules:
       Bot.Classes
+      Bot.ErrorException
       Bot.Logic
       Bot.State.Database.Interact
       Bot.State.Database.Types
       Bot.State.Interact
       Bot.State.Types
       Config
-      Lib
       Logger.Interact
       Logger.Types
       Telegram.Api.Error
@@ -52,15 +52,19 @@ library
       Telegram.Keyboard.Types.KeyboardMessage
       Telegram.Keyboard.Types.Markup
       Vk.Api.Interact
-      Vk.Api.Types
-      Vk.Api.Types.Error
-      Vk.Api.Types.Longpoll
-      Vk.Api.Types.Message
-      Vk.Api.Types.Object
-      Vk.Api.Types.Response
-      Vk.Api.Types.Synonyms
-      Vk.Api.Types.Update
-      Vk.Api.Types.Updates
+      Vk.Api.Longpoll.Interact
+      Vk.Api.Longpoll.Types
+      Vk.Api.Longpoll.Types.Container
+      Vk.Api.Longpoll.Types.Error
+      Vk.Api.Longpoll.Types.Response
+      Vk.Api.Methods.Interact
+      Vk.Api.Methods.Types
+      Vk.Api.Methods.Types.Error
+      Vk.Api.Methods.Types.Message
+      Vk.Api.Methods.Types.Object
+      Vk.Api.Methods.Types.Synonyms
+      Vk.Api.Methods.Types.Update
+      Vk.Api.Methods.Types.Updates
       Vk.Instances
       Vk.Keyboard.Builder
       Vk.Keyboard.Types
@@ -81,6 +85,7 @@ library
     , bytestring
     , configurator
     , containers
+    , exceptions
     , extra
     , http-client
     , http-conduit
@@ -107,6 +112,7 @@ executable wellbot-exe
     , bytestring
     , configurator
     , containers
+    , exceptions
     , extra
     , http-client
     , http-conduit
@@ -137,6 +143,7 @@ test-suite wellbot-test
     , bytestring
     , configurator
     , containers
+    , exceptions
     , extra
     , http-client
     , http-conduit

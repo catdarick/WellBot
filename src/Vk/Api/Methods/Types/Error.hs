@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Vk.Api.Types.Error where
+module Vk.Api.Methods.Types.Error where
 
 import           Data.Aeson                 hiding (Object)
 import           Data.Aeson.Casing          (aesonPrefix)

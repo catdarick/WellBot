@@ -1,19 +1,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Vk.Api.Types.Updates where
+module Vk.Api.Longpoll.Types.Error where
 
-import           Data.Aeson
+import           Data.Aeson                 hiding (Object)
 import           Data.Aeson.Casing          (aesonPrefix)
 import           Data.Aeson.Casing.Internal (snakeCase)
 import           GHC.Generics               (Generic)
-import           Vk.Api.Types.Update
 
-data Updates =
-  Updates
-    { updatesTs      :: String
-    , updatesUpdates :: [Update]
+data Error =
+  Error
+    { errorErrorCode :: Integer
+    , errorErrorMsg  :: String
     }
   deriving (Generic, Show, Eq)
 
-instance FromJSON Updates where
+instance FromJSON Error where
   parseJSON = genericParseJSON $ aesonPrefix snakeCase

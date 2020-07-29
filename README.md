@@ -13,10 +13,11 @@ Logic of both bots is combined.
 git clone https://github.com/catdarick/WellBot
 cd WellBot
 stack install
+mkdir -p /home/$USER/configs && cp ./templates/bot.cfg $_
 ```
 
 ## Usage
-Set VK/Telegram token in config file at `/WellBot/app/bot.cfg`.
+Copy  VK/Telegram token in config file at `/home/<user>/configs/bot.cfg`.
 For VK group id is required too.
 
 From project directory:
