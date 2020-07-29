@@ -26,5 +26,5 @@ WellBot-exe
 
 
 
-![alt text](https://github.com/catdarick/WellBot/blob/Class/Demo.gif?raw=true)
+![alt text](https://github.com/catdarick/WellBot/blob/master/Demo.gif?raw=true)
 
