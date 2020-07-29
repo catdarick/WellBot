@@ -21,7 +21,7 @@ For VK group id is required too.
 
 From project directory:
 ```sh
-WellBot-exe
+wellbot-exe
 ```
 
 
