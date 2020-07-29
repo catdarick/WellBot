@@ -6,7 +6,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           GHC.Generics      (Generic)
 
-data Button =
+newtype Button =
   Button
     { buttonText :: String
     }

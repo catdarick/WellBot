@@ -32,7 +32,7 @@ isTimeToBackup = do
   config <- gets config
   prevTime <- getPrevTime
   curTime <- lift getCurrentTime
-  return $ (diffUTCTime curTime prevTime) > (config & diffTimeBackupPeriod)
+  return $ diffUTCTime curTime prevTime > (config & diffTimeBackupPeriod)
 
 backupAndUpdateTimer :: Bot a => BotStateT a IO ()
 backupAndUpdateTimer = do

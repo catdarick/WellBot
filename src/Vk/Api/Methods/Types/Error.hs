@@ -7,7 +7,7 @@ import           Data.Aeson.Casing          (aesonPrefix)
 import           Data.Aeson.Casing.Internal (snakeCase)
 import           GHC.Generics               (Generic)
 
-data Error =
+newtype Error =
   Error
     { errorFailed :: Integer
     }

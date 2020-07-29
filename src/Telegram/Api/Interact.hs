@@ -41,7 +41,7 @@ getRequest config method queryPairs = do
 getUpdates :: Config -> Offset -> IO [Update]
 getUpdates config offset = do
   bsResponse <- getRequest config "getUpdates" [offsetParam]
-  let maybeResponse = (decode bsResponse :: Maybe (Response [Update]))
+  let maybeResponse = decode bsResponse :: Maybe (Response [Update])
   throwIfError maybeResponse "getUpdates"
   return $ maybe [] getUpdatesFromResult maybeResponse
   where

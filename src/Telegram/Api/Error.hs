@@ -19,7 +19,7 @@ onErrorResponse maybeResponse =
   throwM $
   case maybeResponse of
     Just response ->
-      case (response & errorCode) of
+      case response & errorCode of
         401 -> BadTokenException
         404 -> BadTokenException
         _ ->

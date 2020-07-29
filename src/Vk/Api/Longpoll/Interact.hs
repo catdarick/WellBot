@@ -35,5 +35,5 @@ throwError resp =
     Just (Error code msg) ->
       throwM $
       CommonException $
-      "Longpoll error with code " ++ (show code) ++ ": " ++ msg
+      "Longpoll error with code " ++ show code ++ ": " ++ msg
     Nothing -> throwM BadResponseException

@@ -7,7 +7,7 @@ import           Data.Aeson.Casing
 import           GHC.Generics               (Generic)
 import           Vk.Keyboard.Types.Keyboard
 
-data Messagewithkb =
+newtype Messagewithkb =
   Messagewithkb
     { messagewithkbReplyMarkup :: Keyboard
     }

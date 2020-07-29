@@ -22,7 +22,7 @@ tests =
     ]
 
 testRepeat :: Test
-testRepeat = TestCase (assertEqual "testRepeat failed" expectedRes res)
+testRepeat = TestCase (assertEqual "must send keyboard with repeat message" expectedRes res)
   where
     res =
       unsafeDupablePerformIO $
@@ -41,7 +41,7 @@ testRepeat = TestCase (assertEqual "testRepeat failed" expectedRes res)
 
 testKeyboardResponse :: Test
 testKeyboardResponse =
-  TestCase (assertEqual "testKeyboardResponse failed" expectedRes res)
+  TestCase (assertEqual "must update repeat value for user in database" expectedRes res)
   where
     res =
       unsafeDupablePerformIO $
@@ -54,7 +54,7 @@ testKeyboardResponse =
 
 testForwardDefault :: Test
 testForwardDefault =
-  TestCase (assertEqual "testForwardDefault failed" expectedRes res)
+  TestCase (assertEqual "must forward user's message (default amount)" expectedRes res)
   where
     res =
       unsafeDupablePerformIO $
@@ -74,7 +74,7 @@ testForwardDefault =
 
 testForwardWithAlreadySet :: Test
 testForwardWithAlreadySet =
-  TestCase (assertEqual "testForwardWithAlreadySet failed" expectedRes res)
+  TestCase (assertEqual "must forward user's message (already set amount)" expectedRes res)
   where
     res =
       unsafeDupablePerformIO $
@@ -93,7 +93,7 @@ testForwardWithAlreadySet =
     expectedRes = (expectedAction, expectedState)
 
 testHelp :: Test
-testHelp = TestCase (assertEqual "testHelp failed" expectedRes res)
+testHelp = TestCase (assertEqual "must send help message" expectedRes res)
   where
     res =
       unsafeDupablePerformIO $
@@ -107,7 +107,7 @@ testHelp = TestCase (assertEqual "testHelp failed" expectedRes res)
     expectedRes = (expectedAction, expectedState)
 
 testEcho :: Test
-testEcho = TestCase (assertEqual "testEcho failed" expectedRes res)
+testEcho = TestCase (assertEqual "must forward message without text (sticker e.g.)" expectedRes res)
   where
     res =
       unsafeDupablePerformIO $

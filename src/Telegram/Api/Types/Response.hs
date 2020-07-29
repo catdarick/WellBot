@@ -4,7 +4,6 @@ module Telegram.Api.Types.Response where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
-import           Data.Maybe        (fromJust)
 import           GHC.Generics      (Generic)
 
 

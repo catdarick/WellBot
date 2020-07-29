@@ -8,7 +8,7 @@ import           Data.Aeson.Casing.Internal (snakeCase)
 import           GHC.Generics               (Generic)
 import          Vk.Api.Methods.Types.Message
 
-data Object =
+newtype Object =
   Object
     { objectMessage :: Maybe Message
     }

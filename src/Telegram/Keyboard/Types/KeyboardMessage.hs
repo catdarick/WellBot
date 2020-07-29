@@ -7,7 +7,7 @@ import           Data.Aeson.Casing
 import           GHC.Generics                   (Generic)
 import           Telegram.Keyboard.Types.Markup
 
-data Messagewithkb =
+newtype Messagewithkb =
   Messagewithkb
     { messagewithkbReplyMarkup :: Markup
     }
