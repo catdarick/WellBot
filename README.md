@@ -1,8 +1,8 @@
 # WellBot
 
 WellBot is a simple bot that can respond to a user with its own message and supports the following functional commands:
-  - *__/help__*   - to select echos amount
-  - *__/repeat__* - to see available commands
+  - *__/help__*   - to see available commands
+  - *__/repeat__* - to select echos amount
   
 Regular backups of individual user settings are performed.
 Logic of both bots is combined.
