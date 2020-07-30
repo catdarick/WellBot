@@ -54,9 +54,9 @@ instance Class.Bot VkBot where
       Log.withErrorLogging $
       Api.getUpdatesAndOffset config server_ offset token_
     case maybeUpdatesAndOffset of
-      Just updatesAndOffset -> do
-        let filtredUpdates = filter isJustMessage (fst updatesAndOffset)
-        return (filtredUpdates, snd updatesAndOffset)
+      Just (updates, offset) -> do
+        let filtredUpdates = filter isJustMessage updates
+        return (filtredUpdates, offset)
       Nothing -> do
         Log.info "Need to update server/accessToken/offset"
         Log.withDebugLogging "updateServerAndTokenAndOffset" $
