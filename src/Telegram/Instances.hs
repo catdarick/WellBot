@@ -44,5 +44,3 @@ instance Class.Bot TgBot where
     where
       getOffset defaultOffset [] = defaultOffset
       getOffset defaultOffset xs = 1 + (last xs & Api.updateUpdateId)
-      isJustMessage  =
-        isJust . Api.updateMessage

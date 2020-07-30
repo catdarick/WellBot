@@ -62,8 +62,6 @@ instance Class.Bot VkBot where
         Log.withDebugLogging "updateServerAndTokenAndOffset" $
           updateServerAndTokenAndOffset config
         return ([], offset)
-    where
-      isJustMessage = isJust . Api.objectMessage . Api.updateObject
 
 updateServerAndTokenAndOffset :: Config -> Class.BotStateIO VkBot ()
 updateServerAndTokenAndOffset config = do
