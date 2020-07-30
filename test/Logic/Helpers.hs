@@ -6,6 +6,7 @@ module Logic.Helpers where
 import           Bot.Classes
 import           Bot.State.Database.Types hiding (RepeatsAmount)
 import           Bot.State.Types
+import           Bot.Synonyms
 import           Config
 import           Data.Map                 (fromList)
 import           Data.Time                (UTCTime (UTCTime), utctDay,
@@ -16,7 +17,7 @@ type WithAwaiting = Bool
 
 type WithAlreadySet = Bool
 
-defChatOrUserId :: ChatId
+defChatOrUserId :: UserOrChatId
 defChatOrUserId = 10
 
 defSettedRepAmount :: RepeatsAmount
