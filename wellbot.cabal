@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 50531c648ff7e8a9ec3188c9770d40d05745896f5ecb9bffb5c00655b1ce2d8b
+-- hash: bd4c766b24d9dd473863d6886182acc3d83c4610144049491bfa88a55f26d6e2
 
 name:           wellbot
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       Bot.State.Database.Types
       Bot.State.Interact
       Bot.State.Types
+      Bot.Synonyms
       Config
       Logger.Interact
       Logger.Types

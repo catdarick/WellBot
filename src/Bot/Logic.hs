@@ -11,6 +11,7 @@ import qualified Bot.State.Database.Interact as DB
 import qualified Bot.State.Database.Types    as DB
 import qualified Bot.State.Interact          as State
 import           Bot.State.Types
+import           Bot.Synonyms
 import           Config
 import           Control.Concurrent          (threadDelay)
 import           Control.Monad               (replicateM_, void, when)

@@ -1,16 +1,13 @@
 module Bot.State.Database.Types where
 
+import           Bot.Synonyms
 import           Control.Monad.Trans.State (StateT)
 import           Data.Aeson.Types          (FromJSON, ToJSON)
 import           Data.Map                  (Map)
 import           Data.Time                 (UTCTime)
 import           GHC.Generics              (Generic)
 
-type ChatId = Integer
-
-type RepeatsAmount = Integer
-
-type Chats = Map ChatId RepeatsAmount
+type Chats = Map UserOrChatId RepeatsAmount
 
 data Database offsetType additionalInfoType =
   Database

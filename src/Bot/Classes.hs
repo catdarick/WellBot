@@ -8,6 +8,7 @@ module Bot.Classes where
 
 import           Bot.State.Database.Types
 import           Bot.State.Types
+import           Bot.Synonyms
 import           Config
 import           Control.Monad             (replicateM, replicateM_, void)
 import           Control.Monad.Trans.State (StateT)
@@ -42,8 +43,8 @@ class ( Update (UpdateType a)
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO (RetType a)
   sendKeyboardWithText ::
        a -> Config -> UserOrChatId -> String -> IO (RetType a)
-  getUpdatesAndOffset :: BotStateT a IO ([UpdateType a], OffsetType a)
-  initBot :: BotStateT a IO ()
+  getUpdatesAndOffset :: BotStateIO a ([UpdateType a], OffsetType a)
+  initBot :: BotStateIO a ()
   initBot = return ()
   forwardMessageNTimes ::
        a -> Config -> UserOrChatId -> MesssageId -> Integer -> IO (RetType a)

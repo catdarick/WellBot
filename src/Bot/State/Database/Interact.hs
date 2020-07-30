@@ -8,6 +8,7 @@ import           Bot.Classes               (AdditionalType, Bot, BotStateIO,
                                             name)
 import           Bot.State.Database.Types
 import           Bot.State.Types           (BotState, bot, config, database)
+import           Bot.Synonyms
 import           Config
 import           Control.Exception         (SomeException, try)
 import           Control.Monad             (when)
@@ -43,55 +44,56 @@ getOffset :: Bot a => BotStateIO a (OffsetType a)
 getOffset = gets $ offset . database
 
 isAwaiting :: Bot a => Integer -> BotStateIO a Bool
-isAwaiting chatId = do
+isAwaiting userOrChatId = do
   db <- gets database
   let awChatsVal = db & awaitingChatsID
-  return $ chatId `elem` awChatsVal
+  return $ userOrChatId `elem` awChatsVal
 
 getRepeatsAmount :: Bot a => Config -> Integer -> BotStateIO a Integer
-getRepeatsAmount config userOrChatId = do
+getRepeatsAmount config userOrUserOrChatId = do
   chats <- gets $chats . database
   let defaultRepeatsAmount = config & defaultRepeatAmount
-  let res = Data.Map.lookup userOrChatId chats
+  let res = Data.Map.lookup userOrUserOrChatId chats
   return $ fromMaybe defaultRepeatsAmount res
 
 delAwaitingChat :: Bot a => Integer -> BotStateIO a ()
-delAwaitingChat chatId = do
-  isAwaiting <- isAwaiting chatId
+delAwaitingChat userOrChatId = do
+  isAwaiting <- isAwaiting userOrChatId
   when isAwaiting $
-    Log.info $ "Removed awaiting for keyboard response: " ++ show chatId
+    Log.info $ "Removed awaiting for keyboard response: " ++ show userOrChatId
   db <- gets database
   let awChatsVal = db & awaitingChatsID
-  let newChatsVal = filter (chatId /=) awChatsVal
+  let newChatsVal = filter (userOrChatId /=) awChatsVal
   setDb (db {awaitingChatsID = newChatsVal})
 
 addAwaitingChat :: Bot a => Integer -> BotStateIO a ()
-addAwaitingChat chatId = do
-  Log.info $ "Added awaiting for keyboard response: " ++ show chatId
+addAwaitingChat userOrChatId = do
+  Log.info $ "Added awaiting for keyboard response: " ++ show userOrChatId
   db <- gets database
   let awaitingChats = db & awaitingChatsID
-  setDb db {awaitingChatsID = chatId : awaitingChats}
+  setDb db {awaitingChatsID = userOrChatId : awaitingChats}
 
-addChat :: Bot a => ChatId -> RepeatsAmount -> BotStateIO a ()
-addChat chatId repAmount = do
+addChat :: Bot a => UserOrChatId -> RepeatsAmount -> BotStateIO a ()
+addChat userOrChatId repAmount = do
   chatsOld <- gets $ chats . database
-  setNewChats $ insert chatId repAmount chatsOld
+  setNewChats $ insert userOrChatId repAmount chatsOld
 
 setNewChats :: Bot a => Chats -> BotStateIO a ()
 setNewChats newChats = do
   db <- gets database
   setDb (db {chats = newChats})
 
-delChat :: Bot a => ChatId -> BotStateIO a ()
-delChat chatId = do
+delChat :: Bot a => UserOrChatId -> BotStateIO a ()
+delChat userOrChatId = do
   chatsOld <- gets $ chats . database
-  setNewChats $ delete chatId chatsOld
+  setNewChats $ delete userOrChatId chatsOld
 
-setRepeatsAmount :: Bot a => ChatId -> RepeatsAmount -> BotStateIO a ()
-setRepeatsAmount chatId repAmount = do
-  Log.info $ "Repeats for " ++ show chatId ++ " changed to " ++ show repAmount
-  delChat chatId
-  addChat chatId repAmount
+setRepeatsAmount :: Bot a => UserOrChatId -> RepeatsAmount -> BotStateIO a ()
+setRepeatsAmount userOrChatId repAmount = do
+  Log.info $
+    "Repeats for " ++ show userOrChatId ++ " changed to " ++ show repAmount
+  delChat userOrChatId
+  addChat userOrChatId repAmount
 
 backup :: Bot a => BotStateIO a ()
 backup = do
