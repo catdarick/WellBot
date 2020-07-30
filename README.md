@@ -50,7 +50,7 @@ class Update a where
   getMaybeText    :: a -> Maybe String
 ```
 
-Now we can define the instance for out data type:
+And we can define the instance for out data type:
 ```haskell
 --class Update module here imported qualified as Class
 instance Class.Update Update where
@@ -105,7 +105,7 @@ data Database offsetType additionalInfoType =
 ```
 ###### Note: Field `additionalInfo` is using for some side info. For example: longpoll server address and temp access token in case of Vk.
 
-Also for the bot to work, we need a config and the `Bot`: 
+Besides that, we need a config and the `Bot`: 
 
 ```haskell
 data BotState offsetType additionalType botType =
@@ -116,7 +116,7 @@ data BotState offsetType additionalType botType =
     } deriving (Eq, Show)
 
 ```
-###### Note: This is a slightly simplified version. 
+###### Note: This is a bit simplified version. 
 `Bot` needs to avoid explicit argument passing, but more on that later.
 
 Since the concept of global variables does not exist in Haskell - we use the StateT monad to store this data.
