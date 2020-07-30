@@ -115,7 +115,8 @@ getRestoredOrClearDatabase path defaultOffset = do
     (retRestoredOrDefaultIfCantParse defaultDB curTime)
     eitherText
   where
-    retDefalut (defaultDB :: (Database a b)) (e :: SomeException) =
+    retDefalut (defaultDB :: (Database a b)) (e :: SomeException) = do
+      print e
       return defaultDB
     retRestoredOrDefaultIfCantParse defaultDB curTime text = do
       let maybeDB = readMaybe text

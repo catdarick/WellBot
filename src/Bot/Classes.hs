@@ -19,12 +19,12 @@ type BotStateT a = (StateT (BotState (OffsetType a) (AdditionalType a) a))
 
 type BotStateIO a b = BotStateT a IO b
 
-class Update a where
+class Message a where
   getMaybeText :: a -> Maybe String
   getUserOrChatId :: a -> Integer
   getMessageId :: a -> Integer
 
-class ( Update (UpdateType a)
+class ( Message (MessageType a)
       , Monoid (RetType a)
       , ReadShow (OffsetType a) (AdditionalType a)
       , Eq (OffsetType a)
@@ -32,7 +32,7 @@ class ( Update (UpdateType a)
       Bot a
   where
   type OffsetType a
-  type UpdateType a
+  type MessageType a
   type AdditionalType a
   type AdditionalType a = ()
   type RetType a
@@ -43,7 +43,7 @@ class ( Update (UpdateType a)
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO (RetType a)
   sendKeyboardWithText ::
        a -> Config -> UserOrChatId -> String -> IO (RetType a)
-  getUpdatesAndOffset :: BotStateIO a ([UpdateType a], OffsetType a)
+  getUpdatesAndOffset :: BotStateIO a ([MessageType a], OffsetType a)
   initBot :: BotStateIO a ()
   initBot = return ()
   forwardMessageNTimes ::

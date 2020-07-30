@@ -69,7 +69,7 @@ sendHelpWithLogging userOrChatId = do
     Log.withErrorLogging $
     sendMessage bot config userOrChatId (config & helpText)
 
-handleUpdate :: Bot a => UpdateType a -> BotStateIO a (RetType a)
+handleUpdate :: Bot a => MessageType a -> BotStateIO a (RetType a)
 handleUpdate update = do
   let maybeText = getMaybeText update
   let userOrChatId = getUserOrChatId update

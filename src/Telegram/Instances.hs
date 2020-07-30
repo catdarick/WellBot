@@ -12,7 +12,7 @@ import           Control.Exception           (SomeException, try)
 import           Control.Monad.Trans.Class   (MonadTrans (lift))
 import           Control.Monad.Trans.State   (gets, modify)
 import           Data.Function               ((&))
-import           Data.Maybe                  (fromJust, isJust)
+import           Data.Maybe                  (catMaybes, isJust)
 import qualified Logger.Interact             as Log
 import qualified Telegram.Api.Interact       as Api
 import qualified Telegram.Api.Types          as Api
@@ -20,14 +20,14 @@ import qualified Telegram.Api.Types          as Api
 data TgBot =
   TgBot
 
-instance Class.Update Api.Update where
-  getMaybeText = Api.messageText . fromJust . Api.updateMessage
-  getUserOrChatId = Api.chatId . Api.messageChat . fromJust . Api.updateMessage
-  getMessageId = Api.messageMessageId . fromJust . Api.updateMessage
+instance Class.Message Api.Message where
+  getMaybeText = Api.messageText 
+  getUserOrChatId = Api.chatId . Api.messageChat 
+  getMessageId = Api.messageMessageId 
 
 instance Class.Bot TgBot where
   type OffsetType TgBot = Integer
-  type UpdateType TgBot = Api.Update
+  type MessageType TgBot = Api.Message
   name = const "TG"
   defaultOffset = const 0
   sendMessage a = Api.sendMessage
@@ -37,9 +37,10 @@ instance Class.Bot TgBot where
     (bot, config) <- State.getBotAndConfig
     offset <- DB.getOffset
     updates <- lift $ Api.getUpdates config offset
-    let filtredUpdates = filter isJustMessage updates
+    let maybeMessages = map Api.updateMessage updates
+    let messages = catMaybes maybeMessages
     let newOffset = getOffset offset updates
-    return (filtredUpdates, newOffset)
+    return (messages, newOffset)
     where
       getOffset defaultOffset [] = defaultOffset
       getOffset defaultOffset xs = 1 + (last xs & Api.updateUpdateId)

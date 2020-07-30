@@ -70,21 +70,21 @@ defConfig =
     , tgEnabled = False
     }
 
-data UpdateTest =
-  UpdateTest
+data MessageTest =
+  MessageTest
     { messageId    :: Integer
     , maybeText    :: Maybe String
     , userOrChatId :: Integer
     }
 
-instance Update UpdateTest where
+instance Message MessageTest where
   getMaybeText = maybeText
   getMessageId = messageId
   getUserOrChatId = userOrChatId
 
-getUpdateWithTextAndOffset :: Maybe String -> UpdateTest
+getUpdateWithTextAndOffset :: Maybe String -> MessageTest
 getUpdateWithTextAndOffset maybeText =
-  UpdateTest
+  MessageTest
     { messageId = defMessageId
     , userOrChatId = defChatOrUserId
     , maybeText = maybeText
@@ -96,7 +96,7 @@ data TestBot =
 
 instance Bot TestBot where
   type OffsetType TestBot = Integer
-  type UpdateType TestBot = UpdateTest
+  type MessageType TestBot = MessageTest
   type RetType TestBot = String
   name = const "Test"
   defaultOffset = const 0

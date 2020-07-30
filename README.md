@@ -37,14 +37,14 @@ data Update =
 ```
 Let me remind that for Vk, the set and structure of these entities will be different.
 
-Here are the fields from the `Update` object that the bot needs to know:
+Here are the fields from the `Message` object that the bot needs to know:
 - user or chat id
 - message id
 - sended text
 
 Let's translate this into Haskell:
 ```haskell
-class Update a where
+class Message a where
   getUserOrChatId :: a -> Integer
   getMessageId    :: a -> Integer
   getMaybeText    :: a -> Maybe String
@@ -52,15 +52,13 @@ class Update a where
 
 And we can define the instance for out data type:
 ```haskell
---class Update module here imported qualified as Class
-instance Class.Update Update where
-  getMaybeText = messageText . fromJust . updateMessage
-  getUserOrChatId = chatId . messageChat . fromJust . updateMessage
-  getMessageId = messageMessageId . fromJust . updateMessage
+instance Message Message where
+  getMaybeText = messageText 
+  getUserOrChatId = chatId . messageChat 
+  getMessageId = messageMessageId 
 ```
 
-Now it is possible to interact with the `Update` class instance without knowing anything about its structure. Wonderful!
-
+Now it is possible to interact with the `Message` class instance without knowing anything about its structure. Wonderful!
 
 So let's think about the logic.
 
@@ -131,18 +129,18 @@ Not very cute. For now.
 So, we need to declare an interface so that universal logic can communicate with two different APIs.
 Haskell's classes rescue us again:
 ```haskell
-class Update (UpdateType a) =>
+class Message (MessageType a) =>
       Bot a
   where
   type OffsetType a
-  type UpdateType a
+  type MessageType a
   type AdditionalType a
   name :: a -> String
   defaultOffset :: a -> OffsetType a
   sendMessage :: a -> Config -> UserOrChatId -> String -> IO ()
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO ()
   sendKeyboardWithText :: a -> Config -> UserOrChatId -> String -> IO ()
-  getUpdatesAndOffset :: StateT (BotState (OffsetType a) (AdditionalType a) a) IO ([UpdateType a], OffsetType a)
+  getUpdatesAndOffset :: StateT (BotState (OffsetType a) (AdditionalType a) a) IO ([MessageType a], OffsetType a)
   initBot :: StateT (BotState (OffsetType a) (AdditionalType a) a) IO ()
 ```
 Something horrible about the last two methods.
@@ -156,18 +154,18 @@ type BotStateIO a b = BotStateT a IO b
 
 And now we can rewrite class as:
 ```haskell
-class Update (UpdateType a) =>
+class Message (MessageType a) =>
       Bot a
   where
   type OffsetType a
-  type UpdateType a
+  type MessageType a
   type AdditionalType a
   name :: a -> String
   defaultOffset :: a -> OffsetType a
   sendMessage :: a -> Config -> UserOrChatId -> String -> IO ()
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO ()
   sendKeyboardWithText :: a -> Config -> UserOrChatId -> String -> IO ()
-  getUpdatesAndOffset :: BotStateIO a ([UpdateType a], OffsetType a)
+  getUpdatesAndOffset :: BotStateIO a ([MessageType a], OffsetType a)
   initBot :: BotStateIO a ()
 ```
 ###### Note: The class declaration is a bit simplified. In real code, there are some minor complications for the tests to work. Instances can be seen in the code: [Telegram](/src/Telegram/Instances.hs), [Vk](/src/Vk/Instances.hs).
