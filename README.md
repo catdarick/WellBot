@@ -170,13 +170,13 @@ class Update (UpdateType a) =>
   getUpdatesAndOffset :: BotStateIO a ([UpdateType a], OffsetType a)
   initBot :: BotStateIO a ()
 ```
-###### Note: The class declaration is a bit simplified. In real code, there are some minor complications for the tests to work. Instances can be seen in the code: [Telegram](/Telegram/Instances.hs), [Vk](/Vk/Instances.hs).
+###### Note: The class declaration is a bit simplified. In real code, there are some minor complications for the tests to work. Instances can be seen in the code: [Telegram](/src/Telegram/Instances.hs), [Vk](/src/Vk/Instances.hs).
 A little more pretty. And previously mentioned `someFunc` now be like:
 
 ```haskell
 someFunc :: Bot a => BotStateIO a ()
 ```
-So, after this actions, we can write [general logic](/Bot/Logic.hs) without thinking about implementing a particular method in a specific API.
+So, after this actions, we can write [general logic](/src/Bot/Logic.hs) without thinking about implementing a particular method in a specific API.
 ## Installing
 
 ```sh
