@@ -84,7 +84,7 @@ handleUpdate update = do
 getAndHandleUpdates :: Bot a => BotStateIO a ()
 getAndHandleUpdates = do
   (updates, newOffset) <-
-    Log.withDebugLogging "getUpdatesAndOffset" getUpdatesAndOffset
+    Log.withDebugLogging "getUpdateMessagesAndOffset" getUpdateMessagesAndOffset
   handleUpdates updates
   DB.setOffset newOffset
   whenM State.isTimeToBackup State.backupAndUpdateTimer

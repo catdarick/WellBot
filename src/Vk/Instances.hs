@@ -42,7 +42,7 @@ instance Class.Bot VkBot where
   initBot = do
     (bot, config) <- State.getBotAndConfig
     updateServerAndTokenAndOffset config
-  getUpdatesAndOffset = do
+  getUpdateMessagesAndOffset = do
     (bot, config) <- State.getBotAndConfig
     additionalInfo <-
       gets $ fromMaybe badLongpollInfo . DB.additionalInfo . database
@@ -51,7 +51,7 @@ instance Class.Bot VkBot where
     offset <- DB.getOffset
     maybeUpdatesAndOffset <-
       Log.withErrorLogging $
-      Api.getUpdatesAndOffset config server_ offset token_
+      Api.getUpdateMessagesAndOffset config server_ offset token_
     case maybeUpdatesAndOffset of
       Just (updates, offset) -> do
         let maybeMessages = map (Api.objectMessage . Api.updateObject) updates

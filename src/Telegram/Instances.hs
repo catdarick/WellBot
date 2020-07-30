@@ -33,7 +33,7 @@ instance Class.Bot TgBot where
   sendMessage a = Api.sendMessage
   forwardMessage a = Api.forwardMessage
   sendKeyboardWithText a = Api.sendKeyboardWithText
-  getUpdatesAndOffset = do
+  getUpdateMessagesAndOffset = do
     (bot, config) <- State.getBotAndConfig
     offset <- DB.getOffset
     updates <- lift $ Api.getUpdates config offset

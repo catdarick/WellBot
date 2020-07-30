@@ -14,9 +14,9 @@ import           Vk.Api.Interact      (defaultServer, getRequest)
 import           Vk.Api.Methods.Types
 import           Vk.Keyboard.Builder
 
-getUpdatesAndOffset ::
+getUpdateMessagesAndOffset ::
      Config -> String -> String -> String -> IO (Maybe ([Update], String))
-getUpdatesAndOffset config server offset token = do
+getUpdateMessagesAndOffset config server offset token = do
   let tokenPair = ("key", token)
   let timeoutPair = ("wait", show $ config & secTimeout)
   let offsetPair = ("ts", offset)

@@ -43,7 +43,7 @@ class ( Message (MessageType a)
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO (RetType a)
   sendKeyboardWithText ::
        a -> Config -> UserOrChatId -> String -> IO (RetType a)
-  getUpdatesAndOffset :: BotStateIO a ([MessageType a], OffsetType a)
+  getUpdateMessagesAndOffset :: BotStateIO a ([MessageType a], OffsetType a)
   initBot :: BotStateIO a ()
   initBot = return ()
   forwardMessageNTimes ::

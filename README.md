@@ -140,7 +140,7 @@ class Message (MessageType a) =>
   sendMessage :: a -> Config -> UserOrChatId -> String -> IO ()
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO ()
   sendKeyboardWithText :: a -> Config -> UserOrChatId -> String -> IO ()
-  getUpdatesAndOffset :: StateT (BotState (OffsetType a) (AdditionalType a) a) IO ([MessageType a], OffsetType a)
+  getUpdateMessagesAndOffset :: StateT (BotState (OffsetType a) (AdditionalType a) a) IO ([MessageType a], OffsetType a)
   initBot :: StateT (BotState (OffsetType a) (AdditionalType a) a) IO ()
 ```
 Something horrible about the last two methods.
@@ -165,7 +165,7 @@ class Message (MessageType a) =>
   sendMessage :: a -> Config -> UserOrChatId -> String -> IO ()
   forwardMessage :: a -> Config -> UserOrChatId -> MesssageId -> IO ()
   sendKeyboardWithText :: a -> Config -> UserOrChatId -> String -> IO ()
-  getUpdatesAndOffset :: BotStateIO a ([MessageType a], OffsetType a)
+  getUpdateMessagesAndOffset :: BotStateIO a ([MessageType a], OffsetType a)
   initBot :: BotStateIO a ()
 ```
 ###### Note: The class declaration is a bit simplified. In real code, there are some minor complications for the tests to work. Instances can be seen in the code: [Telegram](/src/Telegram/Instances.hs), [Vk](/src/Vk/Instances.hs).

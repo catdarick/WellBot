@@ -106,4 +106,4 @@ instance Bot TestBot where
     return $ "forwardMessage " ++ show userOrChatId ++ " " ++ show messageId
   sendKeyboardWithText _ _ userOrChatId text =
     return $ "sendKeyboardWithText " ++ show userOrChatId ++ " " ++ text
-  getUpdatesAndOffset = return ([], 0)
+  getUpdateMessagesAndOffset = return ([], 0)
