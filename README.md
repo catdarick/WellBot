@@ -185,8 +185,8 @@ mkdir -p /home/$USER/configs && cp ./templates/bot.cfg $_
 ```
 
 ## Usage
-Set VK/Telegram token in config file at `/home/<user>/configs/bot.cfg`.
-For VK group ID is required too.
+Set Vk/Telegram token in config file at `/home/<user>/configs/bot.cfg`.
+For Vk group ID is required too.
 
 ```sh
 wellbot-exe
