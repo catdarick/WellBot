@@ -115,7 +115,7 @@ data BotState offsetType additionalType botType =
 
 ```
 ###### Note: This is a bit simplified version. 
-`Bot` needs to avoid explicit argument passing, but more on that later.
+`Bot` field needs to avoid explicit argument passing, but more on that later.
 
 Since the concept of global variables does not exist in Haskell - we use the StateT monad to store this data.
 And at the moment the signature of our logic function can be like:
@@ -188,7 +188,6 @@ mkdir -p /home/$USER/configs && cp ./templates/bot.cfg $_
 Set VK/Telegram token in config file at `/home/<user>/configs/bot.cfg`.
 For VK group ID is required too.
 
-From project directory:
 ```sh
 wellbot-exe
 ```
